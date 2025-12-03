@@ -1,0 +1,10 @@
+1200_Processed Images/
+CT_Analysis_Toolkit/
+CT_Config/
+CT_Output/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

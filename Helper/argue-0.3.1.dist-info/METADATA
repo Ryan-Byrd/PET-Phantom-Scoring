@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: argue
+Version: 0.3.1
+Summary: Set bounds and options for your functions and conditions for your methods
+Home-page: https://gitlab.com/jrkerns/argue
+Author: James Kerns
+Author-email: jkerns100@gmail.com
+License: MIT
+Keywords: parameters functions bounds
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+
+UNKNOWN
+
+

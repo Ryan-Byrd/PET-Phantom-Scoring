@@ -1,0 +1,60 @@
+# === GUI Frameworks ===
+customtkinter>=5.2.0
+tkinterdnd2>=0.3.0
+darkdetect>=0.8.0
+
+# === Core System & Utilities ===
+psutil>=5.9.0
+requests>=2.31.0
+colorama>=0.4.6
+
+# === Scientific & Imaging ===
+numpy>=1.26.0
+scipy>=1.11.0
+matplotlib>=3.8.0
+pillow>=10.0.0
+
+# === DICOM & Medical Imaging ===
+pydicom>=2.4.0
+pylibjpeg>=1.4.0
+pylibjpeg-libjpeg>=1.4.0
+pylibjpeg-openjpeg>=1.4.0
+tqdm>=4.66.0
+
+# === File and OS Integration ===
+pandas>=2.1.0
+openpyxl>=3.1.2
+xlsxwriter>=3.1.0
+scikit-image>=0.24.0
+
+# === Optional Helper Packages (safe to include) ===
+natsort>=8.4.0
+simplejson>=3.19.2
+
+# === Added for PET Pipeline ===
+# Multiprocessing wrappers and worker pools
+multiprocess>=0.70.16
+
+# ZIP extraction utilities
+pyunpack>=0.3.2
+patool>=1.12
+
+# For secure folder/file dialogs (fallback)
+pywin32>=306
+pywinauto>=0.6.8
+
+# For more reliable OS path handling across Windows
+pathvalidate>=3.2.0
+
+# For image fingerprinting & hash comparison (organizer)
+imagehash>=4.3.1
+
+# For robust DICOM pixel data handling (edge cases)
+gdcm>=1.1.0
+
+# For full ZIP/RAR/7z support in flattening pipeline
+py7zr>=0.20.5
+rarfile>=4.2
+
+# For accelerations used by scipy/pydicom in certain environments
+numexpr>=2.10.0

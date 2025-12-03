@@ -1,0 +1,24 @@
+pip --version
+
+ 
+python -m ensurepip --upgrade
+
+ 
+pip install pydicom numpy matplotlib
+
+ 
+C:\Users\KendallWilliams\OneDrive - ONE Physics\Radcom Files - General\New Report Templates\Templates Under Construc...
+ 
+PS C:\Users\KendallWilliams\OneDrive - ONE Physics\Radcom Files - General\New Report Templates\Templates Under Construction\Ryans Newest Template Versions\PET Python Scripts>
+ 
+where pip
+
+ 
+python -m pip --version
+
+ 
+python -m pip install pydicom numpy matplotlib
+
+ 
+python -m pip list
+ 

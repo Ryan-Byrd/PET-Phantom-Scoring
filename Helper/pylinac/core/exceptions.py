@@ -1,0 +1,2 @@
+class NotAnalyzed(ValueError):
+    pass

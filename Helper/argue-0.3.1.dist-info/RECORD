@@ -1,0 +1,13 @@
+argue-0.3.1.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+argue-0.3.1.dist-info/METADATA,sha256=1FUwu8Npcd5WzJ_nB5UsHJrSIgl8uwh5AGAjCW1256E,452
+argue-0.3.1.dist-info/RECORD,,
+argue-0.3.1.dist-info/WHEEL,sha256=NzFAKnL7g-U64xnS1s5e3mJnxKpOTeOtlXdFwS9yNXI,92
+argue-0.3.1.dist-info/top_level.txt,sha256=IHn-cfEKm7kn2FpxtpJIFMi1vi3eFm5QtD6ciUvIuqQ,12
+argue/__init__.py,sha256=0OhwNLLSvdbkyIT079pXLLfGwvY6aOVTY2Tktl28Ba8,148
+argue/__pycache__/__init__.cpython-313.pyc,,
+argue/__pycache__/argumentative.cpython-313.pyc,,
+argue/argumentative.py,sha256=3U3NrNtVm5qVxKZ_c_Kr68Tt46UjYmp6pc2VHEaSjXM,3614
+tests/__init__.py,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+tests/__pycache__/__init__.cpython-313.pyc,,
+tests/__pycache__/test_argue.cpython-313.pyc,,
+tests/test_argue.py,sha256=xux-rrXwLA-JRXkdRBBZ89PkJdsrtgMEjOdFyXxZLiM,3054
