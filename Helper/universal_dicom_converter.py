@@ -17,46 +17,71 @@ except Exception:
     TK_AVAILABLE = False
 
 
+import subprocess
+import os
+import pydicom
+
+
 def find_gdcmconv():
     here = os.path.dirname(os.path.abspath(__file__))
     bundled = os.path.join(here, "bin", "gdcmconv.exe")
 
+    # Prefer bundled converter
     if os.path.exists(bundled):
         return bundled
 
-    # fallback: try system PATH
-    return "gdcmconv"
+    # Fallback to system PATH
+    import shutil
+    system_path = shutil.which("gdcmconv")
+    if system_path:
+        return system_path
+
+    return "gdcmconv"   # Will error later if truly missing
 
 
 def is_valid_dicom(path):
     """Validate that the file is a real DICOM with image data."""
+    if not os.path.exists(path):
+        return False
+
     try:
         ds = pydicom.dcmread(path, force=False)
     except Exception:
         return False
+
     if not hasattr(ds, "PixelData"):
         return False
+
     return True
 
 
 def convert_with_gdcm(input_file, output_file):
-    """Attempt conversion using gdcmconv. Returns True if output_file is a valid DICOM."""
-    try:
-        gdcm=find_gdcmconv()
-        subprocess.run([gdcm, "--raw", input_file, output_file],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        check=False)
+    """Attempt conversion using gdcmconv. Returns True if output_file is valid DICOM."""
 
-    except FileNotFoundError:
-        print("❌ ERROR: 'gdcmconv' not found. Install GDCM and ensure it is on PATH.")
-        return False
+    gdcm = find_gdcmconv()
+
+    # Remove stale output file
+    if os.path.exists(output_file):
+        os.remove(output_file)
+
+    cmd = [gdcm, "--raw", input_file, output_file]
+
+    try:
+        subprocess.run(
+            cmd,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+            check=False
+        )
     except Exception:
         return False
 
+    # Validate
     if is_valid_dicom(output_file):
         return True
 
+    # Clean up invalid output
     if os.path.exists(output_file):
         os.remove(output_file)
 
