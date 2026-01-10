@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PET QA – Dark Workbench (Mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      /* Option B: modern dark, neutral + one accent */
+      --bg-0:#070A10;
+      --bg-1:#0B1220;
+      --panel:#0F172A;
+      --panel-2:#111C33;
+      --border:rgba(148,163,184,.18);
+      --border-2:rgba(148,163,184,.28);
+      --text:#E5E7EB;
+      --muted:#9CA3AF;
+      --muted-2:#94A3B8;
+      --accent:#7C3AED;        /* violet accent */
+      --accent-2:#22D3EE;      /* cyan support */
+      --ok:#22C55E;
+      --warn:#FBBF24;
+
+      --radius:16px;
+      --radius-sm:12px;
+      --shadow: 0 20px 55px rgba(0,0,0,.55);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(900px 700px at 85% 0%, rgba(34,211,238,.12), transparent 55%),
+        radial-gradient(900px 800px at 50% 110%, rgba(99,102,241,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    }
+
+    .app{
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px 14px 28px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 14px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,.75);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .brand-mark{
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(34,211,238,.55), transparent 60%),
+        radial-gradient(circle at 70% 70%, rgba(124,58,237,.55), transparent 58%),
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+      flex: 0 0 auto;
+    }
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(229,231,235,.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand p{
+      margin:2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.65);
+      color: var(--muted-2);
+      font-size: 12px;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(251,191,36,.12);
+    }
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(17,24,39,.45);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      white-space: nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: var(--border-2); background: rgba(17,24,39,.65); }
+    .btn-primary{
+      border-color: rgba(124,58,237,.35);
+      background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(34,211,238,.18));
+      box-shadow: 0 14px 34px rgba(124,58,237,.18);
+    }
+
+    /* Main layout */
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,.72);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    .panel-header{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(148,163,184,.12);
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel-title{
+      margin:0;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(229,231,235,.92);
+    }
+    .panel-sub{
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .panel-body{
+      padding: 14px;
+    }
+
+    /* Upload area */
+    .dropzone{
+      border-radius: var(--radius);
+      border: 1px dashed rgba(148,163,184,.35);
+      background: rgba(2,6,23,.30);
+      padding: 16px;
+      min-height: 150px;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dropzone strong{
+      font-size: 14px;
+      color: rgba(229,231,235,.95);
+    }
+    .dropzone span{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .upload-row{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .helper{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Thumbnails strip (mock) */
+    .thumbs{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .thumb{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.16);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+        radial-gradient(circle at 30% 20%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(circle at 70% 80%, rgba(34,211,238,.12), transparent 60%);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      overflow:hidden;
+    }
+    .thumb::after{
+      content:"IMG";
+      position:absolute;
+      bottom:10px;
+      left:10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(229,231,235,.75);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(2,6,23,.55);
+      border: 1px solid rgba(148,163,184,.16);
+    }
+
+    /* Scanner layout panel */
+    .layout-wrap{
+      display:grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+    .layout-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .select{
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.45);
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 12px;
+      outline: none;
+      min-width: 220px;
+    }
+
+    .scanner{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.16);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(124,58,237,.12), transparent 55%),
+        radial-gradient(circle at 85% 15%, rgba(34,211,238,.10), transparent 50%),
+        linear-gradient(180deg, rgba(2,6,23,.40), rgba(2,6,23,.18));
+      padding: 14px;
+      min-height: 420px;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){
+      .scanner{ grid-template-columns: 1fr; }
+    }
+
+    /* Left “organizer” list */
+    .series{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.55);
+      overflow:hidden;
+    }
+    .series-header{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(148,163,184,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .series-header .k{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .series-body{
+      padding: 10px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .series-item{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.35);
+      padding: 10px;
+      cursor: default;
+    }
+    .series-item strong{
+      display:block;
+      font-size: 12px;
+      color: rgba(229,231,235,.92);
+      margin-bottom: 4px;
+    }
+    .series-item small{
+      display:block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+      line-height: 1.35;
+    }
+    .series-item.active{
+      border-color: rgba(124,58,237,.35);
+      box-shadow: 0 0 0 1px rgba(124,58,237,.22), 0 14px 34px rgba(124,58,237,.14);
+      background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(2,6,23,.35));
+    }
+
+    /* Right “scanner layout grid” */
+    .layout{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.40);
+      padding: 12px;
+      display:grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+    .layout-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .layout-head .title{
+      font-size: 13px;
+      color: rgba(229,231,235,.92);
+      letter-spacing: .06em;
+    }
+    .layout-head .meta{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+    }
+
+    .grid2d{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.12);
+      background: rgba(2,6,23,.35);
+      padding: 10px;
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      align-content: start;
+    }
+    .slot{
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.50);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      overflow:hidden;
+    }
+    .slot::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(124,58,237,.22), transparent 60%),
+        radial-gradient(circle at 70% 75%, rgba(34,211,238,.14), transparent 58%);
+      opacity:.18;
+      pointer-events:none;
+    }
+    .slot .label{
+      position:absolute;
+      top:8px;
+      left:8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(229,231,235,.78);
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(2,6,23,.55);
+      border: 1px solid rgba(148,163,184,.14);
+    }
+    .slot.filled{
+      border-color: rgba(34,211,238,.35);
+      background: linear-gradient(135deg, rgba(34,211,238,.16), rgba(15,23,42,.50));
+    }
+    .slot.filled::before{ opacity:.45; }
+    .slot.filled .label{ border-color: rgba(34,211,238,.30); }
+
+    /* Footer hint */
+    .footnote{
+      margin-top: 10px;
+      font-size: 11px;
+      color: rgba(156,163,175,.90);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div style="min-width:0;">
+          <h1>PET QA Workbench</h1>
+          <p>Modern dark mock — upload images and preview scanner-organized layout</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="chip" title="Mock status (not wired yet)">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Status: <strong style="color:#E5E7EB;">Not connected</strong></span>
+        </div>
+        <button class="btn">Import Manifest</button>
+        <button class="btn btn-primary">Start New Session</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- Left: Upload -->
+      <section class="panel" aria-label="Upload images panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Upload</h2>
+            <p class="panel-sub">Drop images here (mock). Later we’ll wire this to folder/ZIP/DICOM, previews, etc.</p>
+          </div>
+          <div class="chip" style="gap:6px;">
+            <span class="dot" style="background:var(--ok); box-shadow:0 0 0 4px rgba(34,197,94,.12);" aria-hidden="true"></span>
+            <span>Mode: <strong style="color:#E5E7EB;">Images</strong></span>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="dropzone" role="button" tabindex="0" aria-label="Dropzone mock">
+            <strong>Drop images or click to browse</strong>
+            <span>Supported: PNG / JPG / TIFF (later). We can also add “Folder” and “ZIP” toggles once styling is approved.</span>
+
+            <div class="upload-row">
+              <button class="btn btn-primary">Browse Files</button>
+              <button class="btn">Browse Folder</button>
+              <button class="btn">Clear</button>
+            </div>
+          </div>
+
+          <div class="helper">Preview (mock thumbnails)</div>
+          <div class="thumbs" aria-label="Uploaded thumbnails mock">
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+          </div>
+
+          <div class="footnote">
+            Next iterations we can tune: accent color, contrast, density, and whether this should look more “dashboard” or more “workbench”.
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Scanner-organized layout -->
+      <section class="panel" aria-label="Scanner layout panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Scanner Layout</h2>
+            <p class="panel-sub">Mock of “scanner-style organized images” — series list on the left, grid layout on the right.</p>
+          </div>
+          <div class="layout-toolbar">
+            <select class="select" aria-label="Layout preset (mock)">
+              <option selected>Preset: 6×4 grid (default)</option>
+              <option>Preset: 8×8 (high density)</option>
+              <option>Preset: Ring view (PET)</option>
+            </select>
+            <button class="btn">Auto-Arrange</button>
+          </div>
+        </div>
+
+        <div class="panel-body layout-wrap">
+          <div class="scanner">
+            <div class="series" aria-label="Series list mock">
+              <div class="series-header">
+                <div class="k">Series</div>
+                <div class="chip" style="padding:6px 10px;">3 detected</div>
+              </div>
+              <div class="series-body">
+                <div class="series-item active">
+                  <strong>Acq 01 — Whole Body</strong>
+                  <small>120 slices · 3.27 mm · 00:12:34</small>
+                </div>
+                <div class="series-item">
+                  <strong>Acq 02 — Head</strong>
+                  <small>180 slices · 2.00 mm · 00:06:10</small>
+                </div>
+                <div class="series-item">
+                  <strong>QC — Phantom</strong>
+                  <small>60 slices · 4.00 mm · 00:03:22</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="layout" aria-label="Layout grid mock">
+              <div class="layout-head">
+                <div class="title">Layout Grid</div>
+                <div class="meta">Selected: Acq 01 · view: axial</div>
+              </div>
+
+              <div class="grid2d" aria-label="Grid of scanner slots mock">
+                <div class="slot filled"><div class="label">A1</div></div>
+                <div class="slot filled"><div class="label">A2</div></div>
+                <div class="slot filled"><div class="label">A3</div></div>
+                <div class="slot filled"><div class="label">A4</div></div>
+                <div class="slot"><div class="label">A5</div></div>
+                <div class="slot"><div class="label">A6</div></div>
+
+                <div class="slot filled"><div class="label">B1</div></div>
+                <div class="slot filled"><div class="label">B2</div></div>
+                <div class="slot filled"><div class="label">B3</div></div>
+                <div class="slot"><div class="label">B4</div></div>
+                <div class="slot"><div class="label">B5</div></div>
+                <div class="slot"><div class="label">B6</div></div>
+
+                <div class="slot filled"><div class="label">C1</div></div>
+                <div class="slot filled"><div class="label">C2</div></div>
+                <div class="slot"><div class="label">C3</div></div>
+                <div class="slot"><div class="label">C4</div></div>
+                <div class="slot"><div class="label">C5</div></div>
+                <div class="slot"><div class="label">C6</div></div>
+
+                <div class="slot"><div class="label">D1</div></div>
+                <div class="slot"><div class="label">D2</div></div>
+                <div class="slot"><div class="label">D3</div></div>
+                <div class="slot"><div class="label">D4</div></div>
+                <div class="slot"><div class="label">D5</div></div>
+                <div class="slot"><div class="label">D6</div></div>
+              </div>
+
+              <div class="footnote">
+                We can switch this from a grid to a more “scanner-like” layout (rings, bed positions, detector blocks) once you tell me what “scanner style” should resemble.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

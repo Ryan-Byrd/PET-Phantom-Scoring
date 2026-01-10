@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PET QA – Dark Workbench (Mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      /* Option B: modern dark, neutral + one accent */
+      --bg-0:#070A10;
+      --bg-1:#0B1220;
+      --panel:#0F172A;
+      --panel-2:#111C33;
+      --border:rgba(148,163,184,.18);
+      --border-2:rgba(148,163,184,.28);
+      --text:#E5E7EB;
+      --muted:#9CA3AF;
+      --muted-2:#94A3B8;
+      --accent:#7C3AED;        /* violet accent */
+      --accent-2:#22D3EE;      /* cyan support */
+      --ok:#22C55E;
+      --warn:#FBBF24;
+
+      --radius:16px;
+      --radius-sm:12px;
+      --shadow: 0 20px 55px rgba(0,0,0,.55);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(900px 700px at 85% 0%, rgba(34,211,238,.12), transparent 55%),
+        radial-gradient(900px 800px at 50% 110%, rgba(99,102,241,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    }
+
+    .app{
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px 14px 28px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 14px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,.75);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .brand-mark{
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(34,211,238,.55), transparent 60%),
+        radial-gradient(circle at 70% 70%, rgba(124,58,237,.55), transparent 58%),
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+      flex: 0 0 auto;
+    }
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(229,231,235,.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand p{
+      margin:2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.65);
+      color: var(--muted-2);
+      font-size: 12px;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(251,191,36,.12);
+    }
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(17,24,39,.45);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      white-space: nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: var(--border-2); background: rgba(17,24,39,.65); }
+    .btn-primary{
+      border-color: rgba(124,58,237,.35);
+      background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(34,211,238,.18));
+      box-shadow: 0 14px 34px rgba(124,58,237,.18);
+    }
+
+    /* Main layout */
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,.72);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .panel.span-2{
+      grid-column: 1 / -1;
+    }
+
+    /* NEW: full-width (full-bleed) bottom panel */
+    .panel.full-bleed{
+      grid-column: 1 / -1;
+      width: calc(100vw - 28px);          /* match body/app side padding feel */
+      margin-left: calc(50% - 50vw + 14px);
+      margin-right: calc(50% - 50vw + 14px);
+    }
+
+    .panel-header{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(148,163,184,.12);
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel-title{
+      margin:0;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(229,231,235,.92);
+    }
+    .panel-sub{
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .panel-body{
+      padding: 14px;
+    }
+
+    /* Upload area */
+    .dropzone{
+      border-radius: var(--radius);
+      border: 1px dashed rgba(148,163,184,.35);
+      background: rgba(2,6,23,.30);
+      padding: 16px;
+      min-height: 150px;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dropzone strong{
+      font-size: 14px;
+      color: rgba(229,231,235,.95);
+    }
+    .dropzone span{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .upload-row{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .helper{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Thumbnails strip (mock) */
+    .thumbs{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .thumb{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.16);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+        radial-gradient(circle at 30% 20%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(circle at 70% 80%, rgba(34,211,238,.12), transparent 60%);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      overflow:hidden;
+    }
+    .thumb::after{
+      content:"IMG";
+      position:absolute;
+      bottom:10px;
+      left:10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(229,231,235,.75);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(2,6,23,.55);
+      border: 1px solid rgba(148,163,184,.16);
+    }
+
+    /* Scanner layout panel */
+    .layout-wrap{
+      display:grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+    .layout-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .select{
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.45);
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 12px;
+      outline: none;
+      min-width: 220px;
+    }
+
+    .scanner{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.16);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(124,58,237,.12), transparent 55%),
+        radial-gradient(circle at 85% 15%, rgba(34,211,238,.10), transparent 50%),
+        linear-gradient(180deg, rgba(2,6,23,.40), rgba(2,6,23,.18));
+      padding: 14px;
+      min-height: 420px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){
+      .scanner{ grid-template-columns: 1fr; }
+    }
+
+    /* Left: file tree */
+    .filetree{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.55);
+      overflow:hidden;
+      display:flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .filetree-header{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(148,163,184,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .filetree-header .k{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .filetree-body{
+      padding: 10px;
+      overflow:auto;
+      min-height: 0;
+    }
+    .tree{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tree ul{
+      list-style:none;
+      margin: 6px 0 0;
+      padding-left: 14px;
+      border-left: 1px solid rgba(148,163,184,.10);
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .node{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.35);
+    }
+    .node .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .icon{
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,.16);
+      background: rgba(15,23,42,.55);
+      display:grid;
+      place-items:center;
+      color: rgba(229,231,235,.70);
+      font-family: var(--mono);
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+    .node .name{
+      font-size: 12px;
+      color: rgba(229,231,235,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .node .meta{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .node.active{
+      border-color: rgba(124,58,237,.35);
+      box-shadow: 0 0 0 1px rgba(124,58,237,.22), 0 14px 34px rgba(124,58,237,.14);
+      background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(2,6,23,.35));
+    }
+
+    /* Right: folder contents */
+    .layout{
+      border-radius: var(--radius);
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.40);
+      padding: 12px;
+      display:grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      min-height: 0;
+    }
+    .layout-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .layout-head .title{
+      font-size: 13px;
+      color: rgba(229,231,235,.92);
+      letter-spacing: .06em;
+    }
+    .layout-head .meta{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+    }
+
+    .contents{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.12);
+      background: rgba(2,6,23,.35);
+      padding: 10px;
+      overflow:auto;
+      min-height: 0;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-content: start;
+    }
+    @media (max-width: 980px){
+      .contents{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px){
+      .contents{ grid-template-columns: 1fr; }
+    }
+
+    .entry{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.50);
+      padding: 10px;
+      display:flex;
+      align-items:flex-start;
+      gap: 10px;
+    }
+    .entry .icon{
+      border-radius: 12px;
+      width: 34px;
+      height: 34px;
+      font-size: 12px;
+    }
+    .entry .text{
+      min-width:0;
+      display:flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1 1 auto;
+    }
+    .entry .primary{
+      font-size: 12px;
+      color: rgba(229,231,235,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .entry .secondary{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+      line-height: 1.35;
+    }
+    .entry.folder{
+      border-color: rgba(34,211,238,.26);
+      background: linear-gradient(135deg, rgba(34,211,238,.10), rgba(15,23,42,.50));
+    }
+    .entry.file{
+      border-color: rgba(148,163,184,.14);
+    }
+
+    /* Footer hint */
+    .footnote{
+      margin-top: 10px;
+      font-size: 11px;
+      color: rgba(156,163,175,.90);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div style="min-width:0;">
+          <h1>PET QA Workbench</h1>
+          <p>Modern dark mock — upload images and browse scanner file structure</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="chip" title="Mock status (not wired yet)">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Status: <strong style="color:#E5E7EB;">Not connected</strong></span>
+        </div>
+        <button class="btn">Import Manifest</button>
+        <button class="btn btn-primary">Start New Session</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- Left: Upload -->
+      <section class="panel" aria-label="Upload images panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Upload</h2>
+            <p class="panel-sub">Drop images here (mock). Later we’ll wire this to folder/ZIP/DICOM, previews, etc.</p>
+          </div>
+          <div class="chip" style="gap:6px;">
+            <span class="dot" style="background:var(--ok); box-shadow:0 0 0 4px rgba(34,197,94,.12);" aria-hidden="true"></span>
+            <span>Mode: <strong style="color:#E5E7EB;">Images</strong></span>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="dropzone" role="button" tabindex="0" aria-label="Dropzone mock">
+            <strong>Drop images or click to browse</strong>
+            <span>Supported: PNG / JPG / TIFF (later). We can also add “Folder” and “ZIP” toggles once styling is approved.</span>
+
+            <div class="upload-row">
+              <button class="btn btn-primary">Browse Files</button>
+              <button class="btn">Browse Folder</button>
+              <button class="btn">Clear</button>
+            </div>
+          </div>
+
+          <div class="helper">Preview (mock thumbnails)</div>
+          <div class="thumbs" aria-label="Uploaded thumbnails mock">
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+            <div class="thumb" title="placeholder"></div>
+          </div>
+
+          <div class="footnote">
+            Next iterations we can tune: accent color, contrast, density, and whether this should look more “dashboard” or more “workbench”.
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Scanner-organized layout (file structure) -->
+      <section class="panel" aria-label="Scanner layout panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Scanner File Structure</h2>
+            <p class="panel-sub">Mock of imaging-system folder structure: tree on the left, selected folder contents on the right.</p>
+          </div>
+          <div class="layout-toolbar">
+            <select class="select" aria-label="Structure preset (mock)">
+              <option selected>Preset: Patient / Study / Series</option>
+              <option>Preset: Station / Bed / Frame</option>
+              <option>Preset: Raw Export (vendor)</option>
+            </select>
+            <button class="btn">Collapse All</button>
+          </div>
+        </div>
+
+        <div class="panel-body layout-wrap">
+          <div class="scanner">
+            <!-- Left: tree -->
+            <div class="filetree" aria-label="File tree mock">
+              <div class="filetree-header">
+                <div class="k">Tree</div>
+                <div class="chip" style="padding:6px 10px;">mock</div>
+              </div>
+
+              <div class="filetree-body">
+                <ul class="tree" aria-label="Mock folder tree">
+                  <li>
+                    <div class="node">
+                      <div class="left">
+                        <div class="icon">↳</div>
+                        <div class="name">/EXPORT</div>
+                      </div>
+                      <div class="meta">root</div>
+                    </div>
+
+                    <ul>
+                      <li>
+                        <div class="node">
+                          <div class="left">
+                            <div class="icon">📁</div>
+                            <div class="name">PATIENT_00042</div>
+                          </div>
+                          <div class="meta">3 items</div>
+                        </div>
+
+                        <ul>
+                          <li>
+                            <div class="node">
+                              <div class="left">
+                                <div class="icon">📁</div>
+                                <div class="name">2025-12-18_STUDY_A</div>
+                              </div>
+                              <div class="meta">2 series</div>
+                            </div>
+
+                            <ul>
+                              <li>
+                                <div class="node active">
+                                  <div class="left">
+                                    <div class="icon">📁</div>
+                                    <div class="name">SERIES_01_WB</div>
+                                  </div>
+                                  <div class="meta">120 files</div>
+                                </div>
+                              </li>
+                              <li>
+                                <div class="node">
+                                  <div class="left">
+                                    <div class="icon">📁</div>
+                                    <div class="name">SERIES_02_HEAD</div>
+                                  </div>
+                                  <div class="meta">180 files</div>
+                                </div>
+                              </li>
+                            </ul>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Right: selected folder contents -->
+            <div class="layout" aria-label="Folder contents mock">
+              <div class="layout-head">
+                <div class="title">Contents</div>
+                <div class="meta">Selected: /EXPORT/PATIENT_00042/2025-12-18_STUDY_A/SERIES_01_WB</div>
+              </div>
+
+              <div class="contents" aria-label="Mock contents grid">
+                <div class="entry folder">
+                  <div class="icon">📁</div>
+                  <div class="text">
+                    <div class="primary">DICOM</div>
+                    <div class="secondary">subfolder · 120 files</div>
+                  </div>
+                </div>
+
+                <div class="entry folder">
+                  <div class="icon">📁</div>
+                  <div class="text">
+                    <div class="primary">RAW</div>
+                    <div class="secondary">subfolder · vendor export</div>
+                  </div>
+                </div>
+
+                <div class="entry file">
+                  <div class="icon">DCM</div>
+                  <div class="text">
+                    <div class="primary">IM-0001-0001.dcm</div>
+                    <div class="secondary">512×512 · 1.2 MB</div>
+                  </div>
+                </div>
+
+                <div class="entry file">
+                  <div class="icon">DCM</div>
+                  <div class="text">
+                    <div class="primary">IM-0001-0002.dcm</div>
+                    <div class="secondary">512×512 · 1.2 MB</div>
+                  </div>
+                </div>
+
+                <div class="entry file">
+                  <div class="icon">TXT</div>
+                  <div class="text">
+                    <div class="primary">series_metadata.txt</div>
+                    <div class="secondary">notes / export info</div>
+                  </div>
+                </div>
+
+                <div class="entry file">
+                  <div class="icon">JSON</div>
+                  <div class="text">
+                    <div class="primary">manifest.json</div>
+                    <div class="secondary">scanner export manifest</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="footnote">
+                Next: we can wire the upload to populate this tree automatically (folder → tree; click node → contents).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ... existing code ... -->
+
+      <!-- Results (RapidCHECK-like: sections + ROI table) -->
+      <section class="panel span-2 full-bleed" aria-label="Results panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Results</h2>
+            <p class="panel-sub">QC sections with associated ROIs (mock). Intended to mirror RapidCHECK: section list → ROI results table.</p>
+          </div>
+          <div class="layout-toolbar">
+            <button class="btn">Export PDF</button>
+            <button class="btn">Export CSV</button>
+            <button class="btn btn-primary">Generate Report</button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="results">
+            <!-- Left: sections list -->
+            <aside class="results-nav" aria-label="Sections list mock">
+              <div class="results-nav-head">
+                <div class="chip" style="gap:8px;">
+                  <span class="dot" style="background:var(--accent-2); box-shadow:0 0 0 4px rgba(34,211,238,.12);" aria-hidden="true"></span>
+                  <span>Run: <strong style="color:#E5E7EB;">Phantom QC</strong></span>
+                </div>
+                <div class="chip" style="padding:6px 10px;">6 sections</div>
+              </div>
+
+              <div class="results-nav-body">
+                <div class="section-item active">
+                  <div class="section-top">
+                    <div class="section-name">Uniformity</div>
+                    <div class="badge pass">PASS</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 8</span>
+                    <span class="badge neutral">Tol ±5%</span>
+                  </div>
+                </div>
+
+                <div class="section-item">
+                  <div class="section-top">
+                    <div class="section-name">Count Rate</div>
+                    <div class="badge fail">FAIL</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 4</span>
+                    <span class="badge neutral">Tol ±3%</span>
+                  </div>
+                </div>
+
+                <div class="section-item">
+                  <div class="section-top">
+                    <div class="section-name">SUV Calibration</div>
+                    <div class="badge pass">PASS</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 3</span>
+                    <span class="badge neutral">Tol ±10%</span>
+                  </div>
+                </div>
+
+                <div class="section-item">
+                  <div class="section-top">
+                    <div class="section-name">Spatial Resolution</div>
+                    <div class="badge neutral">N/A</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 0</span>
+                    <span class="badge neutral">manual</span>
+                  </div>
+                </div>
+
+                <div class="section-item">
+                  <div class="section-top">
+                    <div class="section-name">Slice Thickness</div>
+                    <div class="badge pass">PASS</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 2</span>
+                    <span class="badge neutral">Tol ±1.0 mm</span>
+                  </div>
+                </div>
+
+                <div class="section-item">
+                  <div class="section-top">
+                    <div class="section-name">Artifacts</div>
+                    <div class="badge pass">PASS</div>
+                  </div>
+                  <div class="section-meta">
+                    <span class="badge neutral">ROIs 5</span>
+                    <span class="badge neutral">auto</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            <!-- Right: ROI table -->
+            <section class="results-main" aria-label="ROI results table mock">
+              <div class="results-main-head">
+                <div class="results-main-title">
+                  <div class="h">Uniformity — ROI Results</div>
+                  <div class="p">Path: /EXPORT/PATIENT_00042/2025-1

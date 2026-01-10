@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Phantom_Scoring.py — functional end-to-end with Siemens-aware SUV handling.
+ACR_Specific Overlay.py
 
-Features:
-- Pick input folder (PET DICOM series) and output parent + subfolder name
-- Splash grid to choose 3 uniformity + 1 SUV slice (all zoomed to 250×250 mm)
-- Crosshair for picking: Uniformity CENTER; SUV CENTER→25→16
-- Uniformity: 180 mm Ø ROI mean on 3 slices
-- SUV: 7 × 25 mm Ø ROIs placed using angles from 25 & 16; labels outside phantom
-  * 25/16/12/8 → show Max
-  * Bone/Air/Water → show Mean + Min (two lines)
-- 2×2 composite (SUV top-left), overlay PNG, CSV
-- Display rules: United shows as-is (white background); others: 0–3 SUV window (invert), with robust fallback
-- Siemens-aware SUV: RWVM if present; else if Units=BQML treat pixels as Bq/mL; decay injected dose to Siemens START time; no 1e6 guesses
+Based on the automatic SUV overlay pipeline:
+- Siemens-aware SUV computation (via existing suv_from_ds logic style)
+- Robust display (United vs others, 0–3 SUV window invert w/ fallback)
+
+Changes:
+- User selects ONE slice from the input folder, with a preview image in the selector UI
+- Produces hotcell overlay + central ROI (65 mm diameter) reporting SUVmean
+- Footer bottom-left: SliceThickness + Slice number
+- Fixed display FOV: 220 x 220 mm
 """
 
 import os, math, csv, sys

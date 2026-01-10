@@ -99,6 +99,68 @@ def format_excel_results(category, results_dir, template_path):
     except Exception as e:
         print(f"⚠️ Excel formatting failed for {category}: {e}")
 
+def render_latex_template(template_tex_path: str, results_dir: str, out_tex_path: str) -> None:
+    template_text = ""
+    with open(template_tex_path, "r", encoding="utf-8") as f:
+        template_text = f.read()
+
+    # Use forward slashes for LaTeX portability
+    results_dir_latex = os.path.abspath(results_dir).replace("\\", "/")
+
+    filled = template_text.replace("{{{RESULTS_DIR}}}", results_dir_latex)
+
+    with open(out_tex_path, "w", encoding="utf-8") as f:
+        f.write(filled)
+
+
+
+def compile_latex_to_pdf(tex_path: str, out_dir: str, open_pdf: bool = True) -> str | None:
+    """
+    Compiles a .tex file with pdflatex into out_dir.
+    Returns the produced PDF path, or None on failure.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+
+    pdflatex = shutil.which("pdflatex")
+    if not pdflatex:
+        print("⚠️ pdflatex not found on PATH. Skipping PDF compilation.")
+        return None
+
+    tex_path = os.path.abspath(tex_path)
+    tex_filename = os.path.basename(tex_path)
+
+    cmd = [
+        pdflatex,
+        "-synctex=0",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        f"-output-directory={os.path.abspath(out_dir)}",
+        tex_filename,
+    ]
+
+    try:
+        subprocess.run(
+            cmd,
+            check=True,
+            cwd=os.path.dirname(tex_path),
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"❌ LaTeX compilation failed: {e}")
+        return None
+
+    pdf_path = os.path.join(os.path.abspath(out_dir), os.path.splitext(tex_filename)[0] + ".pdf")
+    if os.path.exists(pdf_path):
+        print(f"✅ PDF created: {pdf_path}")
+        if open_pdf and os.name == "nt":
+            try:
+                os.startfile(pdf_path)  # type: ignore[attr-defined]
+            except Exception as e:
+                print(f"⚠️ Could not open PDF: {e}")
+        return pdf_path
+
+    print("⚠️ LaTeX ran but PDF was not found.")
+    return None
+
 
 def run_analysis_scripts_from_manifest(manifest_path, out_root=None):
     # Load manifest
@@ -216,17 +278,24 @@ def run_analysis_scripts_from_manifest(manifest_path, out_root=None):
                     except Exception as e:
                         print(f"⚠️ Could not copy {fn}: {e}")
 
-        template_path = os.path.join(os.path.dirname(__file__), "PET_Results_Template.xlsx")
-        if os.path.exists(template_path):
-            format_excel_results(label, python_results_root, template_path)
-        else:
-            print(f"⚠️ Template not found: {template_path}")
-
         # --- Optionally remove the category subfolder entirely ---
         try:
             shutil.rmtree(out_dir)
         except Exception as e:
             print(f"⚠️ Could not remove temp folder {out_dir}: {e}")
+
+    # --- After all categories: render + compile the LaTeX report ---
+    template_tex = os.path.join(os.path.dirname(__file__), "report_template.tex")
+    if os.path.exists(template_tex):
+        generated_tex = os.path.join(python_results_root, "report_generated.tex")
+        render_latex_template(template_tex, python_results_root, generated_tex)
+
+        pdf_out_dir = os.path.join(python_results_root, "report_out")
+        compile_latex_to_pdf(generated_tex, pdf_out_dir, open_pdf=True)
+    else:
+        print(f"⚠️ LaTeX template not found: {template_tex}")
+
+
 
 
 def main():

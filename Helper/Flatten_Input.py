@@ -22,6 +22,43 @@ import zipfile
 import shutil
 
 
+def _win_extended_path(path: str) -> str:
+    """
+    On Windows, convert a path to an extended-length path (\\?\\...) to avoid MAX_PATH issues.
+    Leaves paths unchanged on non-Windows.
+    """
+    if os.name != "nt":
+        return path
+
+    p = os.path.abspath(path)
+
+    # Already extended-length
+    if p.startswith("\\\\?\\"):
+        return p
+
+    # UNC path
+    if p.startswith("\\\\"):
+        return "\\\\?\\UNC\\" + p.lstrip("\\")
+    return "\\\\?\\" + p
+
+
+def _copy2_robust(src_path: str, dst_path: str) -> bool:
+    """
+    Copy with Windows long-path support and friendly warnings.
+    Returns True if copied; False if skipped.
+    """
+    try:
+        shutil.copy2(_win_extended_path(src_path), _win_extended_path(dst_path))
+        return True
+    except FileNotFoundError as e:
+        # WinError 3 can be long-path related or a transient/vanished source.
+        print(f"⚠️ Skipping missing/unreachable file:\n   {src_path}\n   ({e})")
+        return False
+    except OSError as e:
+        print(f"⚠️ Skipping file due to OS error:\n   {src_path}\n   ({e})")
+        return False
+
+
 def make_output_folder(input_path, output_root=None):
     """
     Determine and create the Flattened_Input output folder.
@@ -54,8 +91,12 @@ def flatten_from_directory(src_root, out_dir):
     with unique flat names.
     """
     counter = 1
+    copied = 0
+    skipped = 0
     src_root = os.path.abspath(src_root)
     out_dir = os.path.abspath(out_dir)
+
+    os.makedirs(out_dir, exist_ok=True)
 
     print(f"📁 Flattening directory:\n   {src_root}")
     print(f"📂 Output folder:\n   {out_dir}\n")
@@ -77,10 +118,13 @@ def flatten_from_directory(src_root, out_dir):
             new_name = generate_flat_name(counter, fn)
             dst_path = os.path.join(out_dir, new_name)
 
-            shutil.copy2(src_path, dst_path)
-            counter += 1
+            if _copy2_robust(src_path, dst_path):
+                copied += 1
+                counter += 1
+            else:
+                skipped += 1
 
-    print(f"✅ Done. Flattened {counter - 1} files from directory.\n")
+    print(f"✅ Done. Flattened {copied} files from directory. Skipped {skipped}.\n")
 
 
 def flatten_from_zip(zip_path, out_dir):
