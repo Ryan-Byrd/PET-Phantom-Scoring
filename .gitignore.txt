@@ -1,4 +1,3 @@
 1200_Processed Images/
-CT_Analysis_Toolkit/
 CT_Config/
 CT_Output/
