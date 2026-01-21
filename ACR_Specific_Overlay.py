@@ -21,20 +21,52 @@ import os
 import math
 import csv
 import sys
+import argparse
 from datetime import datetime, date, time, timedelta
 
 import numpy as np
 import pydicom
-import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
 
 import matplotlib
-matplotlib.use("TkAgg")
+
+
+def _has_tkinter() -> bool:
+    try:
+        import tkinter  # noqa: F401
+        from tkinter import filedialog as _fd  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _configure_matplotlib_backend():
+    """Prefer TkAgg when available; otherwise fall back to a GUI backend.
+
+    This script uses interactive matplotlib figures (ginput/clicks). Some Python
+    installs on macOS (notably certain Homebrew builds) do not include `_tkinter`.
+    """
+    if _has_tkinter():
+        try:
+            matplotlib.use("TkAgg", force=True)
+            return
+        except Exception:
+            pass
+
+    # On macOS, the native backend usually works without tkinter.
+    try:
+        matplotlib.use("MacOSX", force=True)
+    except Exception:
+        # Leave default backend as-is.
+        pass
+
+
+_configure_matplotlib_backend()
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.widgets import Cursor
 
 from CT_Analysis_Toolkit.Modules.find_phantom_center import find_phantom_center_generalized
+import glob
 
 
 # ---------------------- Config ----------------------
@@ -71,6 +103,9 @@ def ERROR(m): print(f"{CLR['red']}[ERROR]{CLR['reset']} {m}", file=sys.stderr)
 
 # ---------------------- UI helpers ----------------------
 def ask_folder(title: str):
+    import tkinter as tk
+    from tkinter import filedialog
+
     root = tk.Tk()
     root.withdraw()
     path = filedialog.askdirectory(title=title)
@@ -82,6 +117,9 @@ def ask_folder(title: str):
 
 
 def ask_output_folder_and_name():
+    import tkinter as tk
+    from tkinter import filedialog, simpledialog
+
     root = tk.Tk()
     root.withdraw()
     base = filedialog.askdirectory(title="Select OUTPUT parent folder")
@@ -160,6 +198,9 @@ def select_dicom_from_list(folder: str):
         z_s = f"{z:.2f}" if isinstance(z, (int, float)) else "?"
         display.append(f"{i:04d} | Inst={inst_s:>4} | z={z_s:>8} | {fn}")
 
+    import tkinter as tk
+    from tkinter import messagebox
+
     root = tk.Tk()
     root.title("Select DICOM image to process")
 
@@ -204,6 +245,48 @@ def select_dicom_from_list(folder: str):
 
     selected_path = items[selection["idx"]][0]
     return selected_path, selection["idx"], items
+
+
+def build_sorted_items(folder: str):
+    """Build the same 'items' list used by select_dicom_from_list but without UI.
+    Returns list of tuples: (path, InstanceNumber, z, basename)
+    """
+    paths = []
+    for fn in os.listdir(folder):
+        if fn.lower().endswith(".dcm"):
+            paths.append(os.path.join(folder, fn))
+
+    items = []
+    for p in paths:
+        try:
+            ds = pydicom.dcmread(p, stop_before_pixels=True, force=True)
+            rows = getattr(ds, "Rows", None)
+            cols = getattr(ds, "Columns", None)
+            if rows is None or cols is None:
+                continue
+            inst = getattr(ds, "InstanceNumber", None)
+            ipp = getattr(ds, "ImagePositionPatient", None)
+            z = None
+            if ipp and len(ipp) >= 3:
+                try:
+                    z = float(ipp[2])
+                except Exception:
+                    z = None
+            items.append((p, inst, z, os.path.basename(p)))
+        except Exception:
+            continue
+
+    def sort_key(t):
+        _, inst, z, _ = t
+        if z is not None:
+            return (0, z)
+        try:
+            return (1, float(inst))
+        except Exception:
+            return (2, 0.0)
+
+    items.sort(key=sort_key)
+    return items
 
 
 # ---------------------- Utility ----------------------
@@ -285,8 +368,12 @@ def _mass_norm_grams_bw(ds):
 def suv_from_ds_bw(ds, stored_pixels_2d: np.ndarray):
     """
     Siemens-aware SUV (BW) from a single-slice 2D array.
-    - If Siemens and Units=BQML: apply rescale slope/intercept to get Bq/mL
-    - Else: treat stored array as already concentration-like
+
+    IMPORTANT: for parity with the existing pipeline in `3b._Auto_SUV_Overlay.py`,
+    this function expects its input array to be "concentration-like":
+    - Non-Siemens (or non-BQML) images should already have RescaleSlope/Intercept applied.
+    - Siemens + Units==BQML images commonly need RescaleSlope/Intercept applied here.
+
     - ADMIN vs START/NONE decay logic
     """
     a = np.nan_to_num(stored_pixels_2d, nan=0.0).astype(np.float32)
@@ -298,6 +385,8 @@ def suv_from_ds_bw(ds, stored_pixels_2d: np.ndarray):
     slope = float(getattr(ds, "RescaleSlope", 1.0))
     inter = float(getattr(ds, "RescaleIntercept", 0.0))
 
+    # Mirror the 3b pipeline: apply RescaleSlope/Intercept only for Siemens BQML
+    # here, because the non-Siemens path is pre-rescaled before calling this function.
     if manuf == "SIEMENS" and units == "BQML":
         a_bqml = (a * slope) + inter
     else:
@@ -478,21 +567,214 @@ def imshow_pet_basic(ax, suv_img, extent):
     ax.imshow(s_inv, cmap="gray", extent=extent, origin="upper", vmin=0, vmax=3.0)
 
 
+# ---------------------------------------------------------------------------
+# Ported helper: automatic slice-selection (minimal, from 3b._Auto_SUV_Overlay.py)
+# Ported on 2026-01-10 — keep in sync with 3b._Auto_SUV_Overlay.py
+# This function is opt-in (user must choose auto-select) so default behavior
+# (manual single-slice selection) remains unchanged and outputs are preserved.
+# ---------------------------------------------------------------------------
+def auto_select_best_slice(input_dir):
+    """
+    Auto-select a single best slice from a DICOM folder.
+
+    Parity target: `3b._Auto_SUV_Overlay.py` hot-cell slice selection.
+    It picks the slice with the highest max voxel value inside a 180mm ROI
+    (after applying RescaleSlope/RescaleIntercept), skipping first/last slice.
+
+    Returns: (selected_path, selected_index_in_sorted_list)
+    """
+    files = [os.path.join(input_dir, f) for f in os.listdir(input_dir) if f.lower().endswith(".dcm")]
+    files = sorted(files)
+    if not files:
+        raise RuntimeError("No DICOM files found for auto-selection.")
+
+    # Read datasets (stop_before_pixels=False because we need pixel arrays)
+    dsets = []
+    for p in files:
+        try:
+            ds = pydicom.dcmread(p, stop_before_pixels=False)
+            if not hasattr(ds, "PixelData"):
+                continue
+            # Only keep 2D images with valid matrix size
+            rows = int(getattr(ds, "Rows", 0) or 0)
+            cols = int(getattr(ds, "Columns", 0) or 0)
+            if rows <= 0 or cols <= 0:
+                continue
+            try:
+                arr = ds.pixel_array
+                if getattr(arr, "ndim", 0) != 2:
+                    continue
+            except Exception:
+                continue
+            dsets.append((p, ds))
+        except Exception:
+            continue
+
+    if not dsets:
+        raise RuntimeError("No usable DICOM image files found for auto-selection.")
+
+    # Sort by ImagePositionPatient z if present, else InstanceNumber
+    def sort_key(t):
+        _, ds = t
+        ipp = getattr(ds, "ImagePositionPatient", None)
+        if ipp and len(ipp) >= 3:
+            try:
+                return float(ipp[2])
+            except Exception:
+                pass
+        try:
+            return float(getattr(ds, "InstanceNumber", 0))
+        except Exception:
+            return 0.0
+
+    dsets.sort(key=sort_key)
+
+    # Filter out any frames with different matrix size to avoid mask/array shape mismatches
+    ref_rows = int(getattr(dsets[0][1], "Rows", 0) or 0)
+    ref_cols = int(getattr(dsets[0][1], "Columns", 0) or 0)
+    filtered = []
+    for p, ds in dsets:
+        rows = int(getattr(ds, "Rows", 0) or 0)
+        cols = int(getattr(ds, "Columns", 0) or 0)
+        if rows != ref_rows or cols != ref_cols:
+            continue
+        filtered.append((p, ds))
+    dsets = filtered
+    if not dsets:
+        raise RuntimeError("No usable DICOM image files found for auto-selection (matrix-size mismatch).")
+
+    # Pixel spacing from first dataset
+    row_mm, col_mm = [float(x) for x in getattr(dsets[0][1], "PixelSpacing", [1.0, 1.0])]
+    pixel_spacing = float(np.mean([row_mm, col_mm]))
+
+    # Phantom center from middle slice (3b parity)
+    mid_index = len(dsets) // 2
+    mid_px = dsets[mid_index][1].pixel_array.astype(np.float32)
+    cy, cx, _ = find_phantom_center_generalized(
+        mid_px,
+        pixel_size_mm=pixel_spacing,
+        modality=str(getattr(dsets[mid_index][1], "Modality", "PT")).upper(),
+        debug=False,
+    )
+
+    # Build circular mask (180 mm diameter) in pixel coords
+    roi_radius_px = (180.0 / 2.0) / pixel_spacing
+    h, w = mid_px.shape
+    yy, xx = np.ogrid[:h, :w]
+    mask = (xx - cx) ** 2 + (yy - cy) ** 2 <= roi_radius_px ** 2
+
+    # Pick slice with highest max voxel intensity inside ROI (scaled DICOM)
+    max_vals = []
+    for idx, (_, ds) in enumerate(dsets[1:-1], start=1):
+        img = ds.pixel_array.astype(np.float32)
+        slope = float(getattr(ds, "RescaleSlope", 1.0))
+        intercept = float(getattr(ds, "RescaleIntercept", 0.0))
+        img = img * slope + intercept
+        roi = img[mask]
+        if roi.size == 0:
+            max_vals.append((idx, float("nan")))
+            continue
+        max_vals.append((idx, float(np.nanmax(roi))))
+
+    valid = [(i, v) for i, v in max_vals if not np.isnan(v)]
+    if not valid:
+        return dsets[mid_index][0], mid_index
+
+    best_idx, _best_max = max(valid, key=lambda t: t[1])
+    return dsets[best_idx][0], best_idx
+
+
+def _rescale_concentration_like(ds, arr_2d: np.ndarray) -> np.ndarray:
+    """Match the pre-rescale convention used by `3b._Auto_SUV_Overlay.py`.
+
+    - Siemens + Units==BQML: return raw pixel values (float32)
+    - Otherwise: apply RescaleSlope/RescaleIntercept
+    """
+    a = arr_2d.astype(np.float32)
+    manuf = str(getattr(ds, "Manufacturer", "")).upper()
+    units = str(getattr(ds, "Units", "")).upper()
+    slope = float(getattr(ds, "RescaleSlope", 1.0))
+    inter = float(getattr(ds, "RescaleIntercept", 0.0))
+    if manuf == "SIEMENS" and units == "BQML":
+        return a
+    return a * slope + inter
+
+
+
 # ---------------------- Main ----------------------
 def main():
     try:
-        in_dir = ask_folder("Select PET DICOM Folder (INPUT)")
+        parser = argparse.ArgumentParser(add_help=True)
+        parser.add_argument("--i", "--input", dest="input_dir", help="Input DICOM folder")
+        parser.add_argument("--o", "--output", dest="output_dir", help="Output folder (will be created)")
+        parser.add_argument(
+            "--auto",
+            action="store_true",
+            help="Auto-select best slice (recommended; avoids tkinter list selection)",
+        )
+        parser.add_argument(
+            "--manual",
+            action="store_true",
+            help="Manually select slice (requires tkinter)",
+        )
+        args = parser.parse_args()
+
+        tkinter_ok = _has_tkinter()
+
+        in_dir = args.input_dir
+        if not in_dir:
+            if not tkinter_ok:
+                raise RuntimeError("tkinter is not available; pass --i/--input and --o/--output to run headless from dialogs.")
+            in_dir = ask_folder("Select PET DICOM Folder (INPUT)")
         if not in_dir:
             INFO("Cancelled: no input folder.")
             return
 
-        out_dir = ask_output_folder_and_name()
+        out_dir = args.output_dir
+        if not out_dir:
+            if not tkinter_ok:
+                raise RuntimeError("tkinter is not available; pass --o/--output to select output folder without dialogs.")
+            out_dir = ask_output_folder_and_name()
         if not out_dir:
             INFO("Cancelled: no output folder/name.")
             return
+        os.makedirs(out_dir, exist_ok=True)
 
-        selected_path, selected_sorted_idx, sorted_items = select_dicom_from_list(in_dir)
-        INFO(f"Selected: {os.path.basename(selected_path)}")
+        # Choose whether the user wants automatic best-slice selection.
+        if args.auto and args.manual:
+            raise RuntimeError("Choose only one of --auto or --manual")
+
+        if args.auto:
+            use_auto = True
+        elif args.manual:
+            use_auto = False
+        elif not tkinter_ok:
+            # Without tkinter we cannot show the yes/no prompt or the manual listbox.
+            use_auto = True
+            INFO("tkinter unavailable; defaulting to auto-select best slice.")
+        else:
+            from tkinter import messagebox
+            use_auto = messagebox.askyesno(
+                "Auto-select slice?",
+                "Use automatic best-slice selection (recommended for ACR)?\n\nChoose 'No' to pick a single slice manually.",
+            )
+
+        if use_auto:
+            INFO("Auto-selecting best slice...")
+            selected_path_auto, _idx = auto_select_best_slice(in_dir)
+            # Build sorted_items so we can keep the same index/value semantics as the UI path
+            sorted_items = build_sorted_items(in_dir)
+            selected_sorted_idx = 0
+            # find matching path
+            for i, it in enumerate(sorted_items):
+                if os.path.normpath(it[0]) == os.path.normpath(selected_path_auto):
+                    selected_sorted_idx = i
+                    break
+            selected_path = selected_path_auto
+            INFO(f"Auto-selected: {os.path.basename(selected_path)} (index {selected_sorted_idx})")
+        else:
+            selected_path, selected_sorted_idx, sorted_items = select_dicom_from_list(in_dir)
+            INFO(f"Selected: {os.path.basename(selected_path)}")
 
         ds = pydicom.dcmread(selected_path, stop_before_pixels=False)
         if not hasattr(ds, "PixelData"):
@@ -505,8 +787,9 @@ def main():
         row_mm = float(pxsp[0])
         col_mm = float(pxsp[1])
 
-        # SUV image
-        suv_img, suv_note, _scale = suv_from_ds_bw(ds, arr)
+        # SUV image (match the 3b pipeline rescale convention)
+        arr_res = _rescale_concentration_like(ds, arr)
+        suv_img, suv_note, _scale = suv_from_ds_bw(ds, arr_res)
         INFO(f"SUV mode: {suv_note}")
 
         # Click center, 25, 16 and derive 7 ROI centers
@@ -605,10 +888,12 @@ def main():
         INFO("Done.")
 
     except Exception as e:
-        try:
-            messagebox.showerror("Error", str(e))
-        except Exception:
-            pass
+        if _has_tkinter():
+            try:
+                from tkinter import messagebox
+                messagebox.showerror("Error", str(e))
+            except Exception:
+                pass
         ERROR(str(e))
 
 
