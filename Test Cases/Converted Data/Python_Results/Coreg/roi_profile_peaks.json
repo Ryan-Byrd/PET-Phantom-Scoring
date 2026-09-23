@@ -1,0 +1,59 @@
+{
+  "series1_modality": "PT",
+  "series2_modality": "CT",
+  "series1_expected_peaks": 2,
+  "series2_expected_peaks": 4,
+  "note": "Peaks detected from differential profiles (dROI/dz)",
+  "series1_fwhm": {
+    "fwhm_mm": 185.82133168609752,
+    "z_left_mm": -82.18518952252472,
+    "z_right_mm": 103.6361421635728,
+    "z_mid_mm": 10.725476320524038
+  },
+  "series2_fwhm": {
+    "fwhm_mm": 209.8813176720996,
+    "z_left_mm": -94.67383864522186,
+    "z_right_mm": 115.20747902687776,
+    "z_mid_mm": 10.26682019082795
+  },
+  "series1_peaks": [
+    {
+      "slice_index": 14,
+      "z_position_mm": -80.82,
+      "roi_value": 1511.8648681640625,
+      "differential_value": 249.00685348277375
+    },
+    {
+      "slice_index": 70,
+      "z_position_mm": 102.3,
+      "roi_value": 1514.3316650390625,
+      "differential_value": -253.06917243047621
+    }
+  ],
+  "series2_peaks": [
+    {
+      "slice_index": 10,
+      "z_position_mm": -93.9,
+      "roi_value": -691.4489135742188,
+      "differential_value": 56.918624271311174
+    },
+    {
+      "slice_index": 13,
+      "z_position_mm": -84.09,
+      "roi_value": -538.4732055664062,
+      "differential_value": -5.057723952360448
+    },
+    {
+      "slice_index": 70,
+      "z_position_mm": 102.3,
+      "roi_value": -575.828125,
+      "differential_value": 5.251319255303912
+    },
+    {
+      "slice_index": 74,
+      "z_position_mm": 115.38,
+      "roi_value": -754.4681396484375,
+      "differential_value": -54.736272129443776
+    }
+  ]
+}

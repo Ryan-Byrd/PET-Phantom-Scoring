@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Summary of changes in STIR release 1.4 (dated 25/01/2006)</title>
+  </head>
+
+  <body>
+    <h1>Summary of changes in STIR release 1.4 (dated 25/01/2006)</h1>
+
+<p>
+<p>Nearly all work on this update was by Kris Thielemans. <br>
+Timothy Borgeaud helped with the updates for Scanner and SinglesRates.
+Thanks to Oliver Nix for fixes for (and testing with) Visual Studio Express 2005.
+Thanks to Fr&eacute;d&eacute;ric Schoenahl for testing with 
+<a href=http://valgrind.org/<a>valgrind</a>.
+</p>
+<h2> Summary for endusers (also to be read by developers)</h2>
+
+<h3>Known problems</h3>
+<ul>
+<li>Currently the implementation if the incremental interpolating
+backprojector has problems on certain processors due to floating point
+rounding errors. Intel *86 and PowerPC give correct results, SunSparc and Opteron
+has a problem at tangential_pos_num==0 (also HP Risc stations give
+problems). (You would notice problems in the central voxel, which
+will influence neighboring voxels in the iterative algorithms.) 
+
+See the User's Guide for details on how to choose another backprojector.
+</li>
+<li>Currently the implementation if the incremental interpolating
+backprojector fails when the number of views in not even. Images
+are wrong, even though the programs might run till the end.
+</li>
+<li>Images have to have the default number of planes. Trying to 
+forward project images with smaller or larger number of planes
+will show up some problems, which we thought to have removed already :-/ .
+</li>
+<li>When specifying shapes (e.g. for generate_image or list_ROI_values),
+the code to specify Euler angles is buggy
+(get after set is not consistent).
+Also, the direction vectors are ignored during parsing.
+</li>
+<li>OSMAPOSL by default uses a truncation to a cylindrical FOV. 
+However, for even-sized images, this FOV is half a pixel 
+displaced w.r.t. to the origin used in the rest of STIR.
+The same routine is used in manip_image and compare_image.
+</li>
+<li>  CPU times reported are invalid on Windows 9?, maybe ME as well. They are
+fine on NT and presumably 2000 and XP. There doesn't seem to be a way to get 
+CPU times in the older Windows versions. 
+</li>
+</ul>
+
+
+<h3>New utilities</h3>
+<ul>
+<li>Some utilities (located in <tt>listmode_utilities</tt>) for viewing info in the
+.sgl file produced by ECAT HR+ or ECAT EXACT 3D scanners.
+</li>
+</ul>
+
+<h3>Bugs removed that might affect users</h3>
+<ul>
+<li> corrected bug in CListModeData::save_get_position/set_get_position
+if they were called  
+for the last chunk of the listmode file (where chunk size was determined by 
+buf_size_in_bytes = 8683520). In that case, the repositioning failed and called
+error() and aborted the program. In normal use, this bug would
+normally only have appeared if the last frame was very short.
+</li>
+<li> corrected bug in buildblock/overlap_interpolate.cxx that caused wrong
+  value in the first non-zero output bin if the left edge of the first
+  in_data is to the left of the left edge of the first out_data.
+  This routine is used by <tt>zoom_image</tt>.
+</li>
+<li> <tt>buildblock/Scanner.cxx</tt>: corrected value written for "distance between
+  rings (cm)" in parameter_info(). This solves a problem in
+ <tt>list_projdata_info</tt> and others.
+</li>
+<li> <tt>recon_buildblock/ProjMatrixByBinUsingRayTracing.cxx</tt>:
+ corrected a BUG in add_adjacent_z. This function is used for segment 0 in case voxel_size.z()
+ is less than axial_sampling_in_m (e.g. the 'span=1' case). If you were unlucky, a sensitivity to 
+ rounding errors could mean that the last plane of voxels contributing to a sinogram was 
+ignored.
+</li>
+<li>corrected behaviour of the SSRB routines for 
+max_in_segment_num_to_process=-1. Now uses the maximum present in the
+input data. This fixes a minor problem with FBP2D noticed by Hagen Moelle.
+</li>
+<li><tt>utilities/SSRB.cxx</tt> had wrong command line processing. The last
+  argument (max_in_segment_num_to_process) had to be present, but was then
+  ignored (as it was initialised from the previous argument).
+</li>
+ </ul>
+
+<h3>Code changes that influence your results</h3>
+<ul>
+<li>The Interfile header for projection data now uses a different
+   convention for the specifying the ring diameter etc. Current keywords are
+   <pre>
+   inner ring diameter (cm) := ...
+   average depth of interaction (cm) := ...
+   default bin size (cm) :=
+   effective central bin size (cm) :=
+   </pre>
+   For arc-corrected data, it is the last keyword that is used to
+   set the tangential sampling.<br>
+   The previous keywords <strong><tt>ring diameter (cm)</tt></strong> 
+   and <strong><tt>bin size</tt></strong> are now <strong>ignored</strong>.
+   This is done to prevent reading the wrong ring radius etc from old files (see next item).
+   <br>
+   If you want to get the same reconstructions as before, set
+   <tt>inner_ring_diameter + 2*average_depth_of_interaction/10</tt> equal to
+   the old <tt>ring_diameter</tt>.
+</li>
+<li>The ring diameter for most <strong>CTI/Siemens scanners</strong> is changed. 
+   Values now match to what is used by CTI. In particular, an average 
+   depth-of-interaction is
+   added to give an <i>effective</i> ring radius. As this changes the 
+   scanner dimensions slightly (about 1.5% larger) you will get slightly
+   different values in the reconstructed images. This change will be tiny
+   for arc-corrected data, but somewhat larger for non-arccorrected data
+   (tests indicate again less than 1% difference).
+   Note however that changes in the sensitivity image as used by OSMAPOSL
+   are larger. So, <strong>do not re-use existing sensitivity images</strong>.
+</li>
+<li>Sizes such as ring-spacing and bin-size for the <strong>GE Discovery ST</strong> 
+have changed according to info from Ravindra Manjeshwar (GE Research). The Advance
+data were ok. 
+</li>
+<li> Reconstruction programs now get the pixel size from
+ <tt>default_bin_size*zoom</tt> (default bin size either specified in the Interfile header
+or in Scanner.cxx). (It used to be <tt>get_sampling_in_s(Bin(0,0,0,1))</tt>
+ before). This will
+  make a <strong>difference in the voxel size when using non-arccorrected data</strong>
+  (and with arc-corrected data if the bin size is different from the default value).
+ However, it makes the voxel size consistent between using arc-corrected and non-arccorrected
+data as input.
+</li>
+<li>Handling of 3 header fields when writing ECAT7 data has changed somewhat. 
+<ul>
+<li>The <tt>bin_size</tt> field in the main header is now always set to the
+default_bin_size of the scanner. For sinogram data, the <tt>x_resolution</tt>
+in the subheader is normally also set to the default bin size. 
+Only for arc-corrected data, the x_resolution is always set to the sampling_in_s.
+</li>
+<li>The corrected correspondence between zoom and voxel size in the ECAT7 
+header to follow the CTI convention, so recon_zoom will now have a slightly 
+different value.</li>
+</ul>
+<li><strong>WARNING</strong>: changed format of command line parameters of <tt>fwdtest</tt>to 
+an incompatible format.
+<tt>fwdtest</tt> can now take a parameter file with the forward projector parameters 
+(similar to <tt>bcktest</tt>).
+This makes it possible to run complete forward projections without user input (should work by 
+redirecting <tt>stdin</tt> to <tt>/dev/null</tt> such that all questions are answered with their 
+default values).
+</li>
+<li><strong>WARNING</strong>: changed order of command line parameters of <tt>bcktest</tt>.
+</li>
+</ul>
+ 
+<h3>New functionality of existing utilities</h3>
+<ul>
+<li> added arc-correction to FBP, 3DRP and correct_projdata
+</li>
+<li> added classes to use ECAT7 normalisation files. You can now
+normalise and dead-time correct your ECAT7 sinograms.
+</li>
+<li>changes in the interpolating backprojector allow handling data where the
+number of views is not a multiple of 4 (such as the Discovery ST).</li>
+<li>added a quadratic prior to be used by OSMAPOSL</li>
+<li>Added data for the <strong>GE Discovery STE</strong>, <strong>GE Discovery RX</strong>  
+and <strong>Philips Allegro</strong>.
+</li>
+<li>a new option --max_segment_num_to_process to stir_math
+</li>
+<li> a new option --verbose to postfilter
+</li>
+<li> a new option -n to conv_to_ecat7 that attempts to fix the scale factor used to 1</li>
+<li> interfile (and in general Array) IO can now use 1-byte integers.</li>
+</ul>
+
+
+<h3>Code changes that do not influence your results</h3>
+<ul>
+<li> removed a bug in listmode classes for ECAT 966 and 962 (function get_detectors), 
+which would have caused your program to crash.
+</li>
+<li>removed a few bugs in LORCoordinates.inl</li>
+<li> recon_buildblock/RayTraceVoxelsOnCartesianGrid.cxx has changed behaviour
+  when LOR is in a plane between 2 voxels. Previous version had ill-defined
+  behaviour (it would put all results in one or the other, depending on
+  round-errors). Now it stores half of the results in each plane.</li>
+<li> the 'ray tracing' type of 'matrix' for projection uses the above
+routine and is now more flexible with respect to zooms etc. The previous
+version aborted when it detected that a line would be in a plane between 2 voxels.</li>
+<li>removed some small memory leaks.</li>
+<li>removed problem in FBP2D, making sure that all variables are initialised 
+(bug spotted by Carole Lartizien)</li>
+<li>code changes to iterators in VectorWithOffset (and hence Arrays etc). 
+They now use some boost classes to have more functionality (e.g. reverse iterators).</li>
+<li>BasicCoordinate objects now take less memory as they no longer allocate
+an extra element.</li>
+<li> updated boost include files to 1.32.0 and added more boost libraries.</li>
+</ul>
+
+<h3>Installation procedure changes</h3>
+<ul>
+<li>Projects for Visual Studio 6 have been updated. Some windows libraries
+that were never used have been removed. This might make transfer to 
+Visual Studio Express 2005 easier. However, these projects have not been tested for 
+a while. Search the mailing list for more info if you want to try this.
+</li>
+</ul>
+
+
+<h3>Documentation changes</h3>
+<ul>
+<li>updated doxygen and User's Guide</li>
+ </ul>
+
+<h3>recon_test_pack changes</h3>
+<ul>
+<li>Added tests for the quadratic prior</li>
+<li>Added tests for conv_to_ecat7 (disabled by default, use --ecat7 to enable)</li>
+</ul>
+
+<H2>What's new for developers (aside from what should be obvious
+from the above):</H2>
+
+<h3>New functionality</h3>
+<ul>
+<li>a new hierarchy <tt>SinglesRates</tt> in data_buildblock. This encodes singles rates
+during a PET scan.</li>
+<li>some extra files for manipulating matrices in <tt>include/stir/numerics</tt>
+</li>
+</ul>
+<h3>Other code changes</h3>
+<ul>
+<li>a few small changes to the <tt>CListRecord</tt> hierarchy. You 
+will have to adapt your code (implement set/get_time_in_millisecs and remove set/get_time_in_secs (as
+  now in CListRecord)</li>
+<li><tt>Scanner</tt>  has more members for singles. It also differentiates between the inner ring radius
+and an effective ring radius (using some average depth of interaction as supplied by the
+scanner manufacturer). Multiple detector-layer scanners are not really supported though.
+</li>
+<li>Many files now have explicit copyright statements, but still not all.</li>
+</ul>
+</body>
+
+</html>
+

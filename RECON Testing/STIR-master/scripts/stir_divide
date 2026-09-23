@@ -1,0 +1,19 @@
+#! /bin/sh
+# A simple script that call stir_math for division
+#
+#  Copyright (C) 2005- 2008, Hammersmith Imanet Ltd
+#  This file is part of STIR.
+#
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  See STIR/LICENSE.txt for details
+#      
+# Author Kris Thielemans
+# 
+# Example:
+# stir_divide output file1 file2
+# => will set output to file1/file2
+# Usual stir_math options can be used to change all this
+
+echo "stir_math --mult --power -1 $*"
+stir_math --mult --power -1 $*

@@ -1,0 +1,69 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% --- Results folder is injected by Python (do not edit this line) ---
+\edef\ResultsDir{\detokenize{__RESULTS_DIR__}}
+
+% --- Tell LaTeX where to look for images and listings so we can use filenames only ---
+\graphicspath{{\ResultsDir/}}
+\lstset{inputpath={{\ResultsDir/}}}
+
+% --- CSV listing style ---
+\lstdefinestyle{csvstyle}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!2},
+  showstringspaces=false
+}
+
+\title{PET Phantom Report}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+
+\section{Output}
+\subsection*{SUV Analysis}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.49\textwidth]{suv_overlay.png}
+  \includegraphics[width=0.49\textwidth]{suv_composite.png}
+  \caption{suv overlay and composite.}
+\end{figure}
+
+\lstinputlisting[style=csvstyle]{suv_results.csv}
+
+\newpage
+\subsection*{Count Rate Performance}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.80\textwidth]{uniformity_suv_composite.png}
+  \caption{uniformity suv composite.}
+\end{figure}
+
+\lstinputlisting[style=csvstyle]{count_rate_performance_suv_measurements.csv}
+
+\newpage
+
+
+\subsection*{Uniformity}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.49\textwidth]{pet_splashview.png}
+  \includegraphics[width=0.49\textwidth]{pet_deviationplot.png}
+  \caption{splash view and deviation plot.}
+\end{figure}
+
+
+\end{document}

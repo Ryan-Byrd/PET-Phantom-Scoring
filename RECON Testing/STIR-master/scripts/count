@@ -1,0 +1,80 @@
+#! /bin/bash -e
+# A script to write a sequence of numbered strings to stdout
+#
+#  Copyright (C) 2005- 2008, Hammersmith Imanet Ltd
+#  Copyright (C) 2018 University College London
+#  This file is part of STIR.
+#
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  See STIR/LICENSE.txt for details
+#      
+# Author Kris Thielemans
+
+print_usage_and_exit()
+{
+  echo "Usage:"
+  echo "   `basename $prog` [--pre prefix] [--post postfix] start end [inc]"
+  echo "Prints a sequence of words to stdout"
+  echo ""
+  echo "Examples:"
+  echo "count 3 5"
+  echo "  => 3 4 5"
+  echo "count 3 9 2"
+  echo "  => 3 5 7 9"
+  echo "count -pre A --post B 3 5"
+  echo " => A3B A4B A5B"
+  exit 1
+}
+
+prog=$0
+
+# option processing
+prefix=
+postfix=
+# check if more than 2 args and first arg starts with a -
+while :; do
+
+  case "$1" in
+  --pre)
+    prefix="$2"
+    shift
+    shift
+    ;;
+
+ --post)
+    postfix="$2"
+    shift
+    shift
+    ;;
+
+ -?*)
+    echo Unrecognised option "$1"
+    print_usage_and_exit    
+    ;;
+
+ *)
+   break
+  esac
+done
+
+if [ $# -ne 2 -a  $# -ne 3 ]
+then
+  print_usage_and_exit
+fi
+
+if [ $# -eq 3 ]
+then
+    increment=$3
+else
+    increment=1
+fi
+
+all=
+frame=$1
+while [ $frame -le $2 ]
+do
+  all="$all $prefix$frame$postfix"
+  frame=$(( frame+$increment ))
+done
+echo $all

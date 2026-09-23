@@ -1,0 +1,446 @@
+/*
+    Copyright (C) 2000- 2009, Hammersmith Imanet Ltd
+    Copyright (C) 2013, Kris Thielemans
+    Copyright (C) 2020, University College London
+    This file is part of STIR.
+
+    SPDX-License-Identifier: Apache-2.0
+
+    See STIR/LICENSE.txt for details
+*/
+
+// define some doxygen groups and namespace
+// This file does not contain any code
+
+/*! \namespace stir
+  \brief Namespace for the STIR library (and some/most of its applications)
+
+  This namespace encompasses the whole
+  library. All classes, functions and symbols are in this namespace.
+  This has the effect that conflicts with any other library is
+  impossible (except if that library uses the same namespace...).
+ */
+
+/*! \namespace stir::BSpline
+  \brief Namespace for functions and classes for B-Spline interpolation in the STIR library
+ */
+
+/*! \namespace stir::detail
+  \brief Namespace for the implementation details of the STIR library
+
+  You should never have to call one of these routines.
+*/
+
+/*! \namespace stir::ecat
+  \brief Namespace for the ECAT IO part of the STIR library (and some/most of its applications)
+
+  This namespace contains all routines that are common to the ECAT6 and
+  ECAT7 format.
+*/
+
+/*! \namespace stir::ecat::ecat7
+  \brief Namespace for the ECAT7 IO part of the STIR library (and some/most of its applications)
+
+  This namespace is only non-empty when the HAVE_LLN_MATRIX preprocessor
+  symbol is defined during compilation.
+  */
+
+// have to define it here, otherwise doxygen ignores the \def command below
+#define HAVE_LLN_MATRIX
+
+/*! \def HAVE_LLN_MATRIX
+    \brief Preprocessor symbol that needs to be defined to enable ECAT7 support.
+  You need to have the ecat matrix library developed originally at the
+  UCL of Louvain la Neuve. If the STIR Makefiles can find this
+  library, HAVE_LLN_MATRIX will be automatically defined for you.
+  See the User's guide for instructions.
+*/
+/*! \namespace stir::ecat::ecat6
+  \brief Namespace for the ECAT6 IO part of the STIR library (and some/most of its applications)
+  */
+
+/*! \namespace stir::GE
+  \brief Namespace for the part of the STIR library that handles GE data (and some/most of its applications)
+
+  This namespace contains all routines that are common to all GE formats
+*/
+/*! \namespace stir::GE:RDF_HDF5
+  \brief Namespace for the part of the STIR library that handles GE data with HDF5-based file formats
+
+  This namespace contains all routines that are used for GE RDF10 etc
+*/
+
+/*!
+\defgroup STIR STIR
+All of STIR.
+*/
+
+/*!
+\defgroup STIR_library STIR library
+\ingroup STIR
+The whole collection of libraries in STIR.
+*/
+
+/*!
+\defgroup buildblock Basic building blocks
+\ingroup STIR_library
+Library with things that are not specific to reconstructions.
+This includes multi-dimensional arrays, images, image processors,
+projection data,...
+*/
+/*!
+\defgroup buildblock_detail Implementation details for buildblock
+\ingroup buildblock
+*/
+/*!
+\defgroup Array Items relating to vectors and (multi-dimensional) arrays
+\ingroup buildblock
+*/
+/*!
+\defgroup Array_detail Implementation details used by Array classes
+\ingroup Array
+*/
+/*!
+\defgroup Array_IO Functions that implement IO for Array objects
+\ingroup Array
+*/
+/*!
+\defgroup Array_IO_detail Implementation details for functions that implement IO for Array objects
+\ingroup Array_IO
+*/
+/*!
+\defgroup Coordinate Items relating to coordinates
+\ingroup buildblock
+*/
+
+/*!
+\defgroup geometry Items related to simple geometric calculations
+\ingroup buildblock
+Functions to compute distances between lines etc.
+*/
+/*!
+\defgroup ancillary Items related to ancillary information such as radionuclide, patient info etc
+\ingroup buildblock
+ */
+/*!
+\defgroup projdata Items related to projection data
+\ingroup buildblock
+Basic support for projection data. This is the term generally used in STIR
+for data obtained by the scanner or immediate post-processing.
+*/
+/*!
+\defgroup LOR Items related to Line Of Responses (preliminary)
+\ingroup projdata
+Classes for LORs.
+\warning Preliminary and likely to change in the next release
+*/
+/*!
+\defgroup densitydata Items related to image data
+\ingroup buildblock
+Basic support for image (or discretised density) data.
+*/
+/*!
+\defgroup resolution Items related to finding image resolution based on point or line sources
+\ingroup densitydata
+*/
+/*!
+\defgroup DataProcessor Data processors
+\ingroup buildblock
+A hierarchy of classes for performing data processing. Mechanisms
+for parsing are provided such that different image processors can
+be selected at run-time.
+*/
+/*!
+\defgroup ImageProcessor Image processors
+\ingroup densitydata
+\see Doxygen group DataProcessor for other members!
+
+A hierarchy of classes for performing image processing. Mechanisms
+for parsing are provided such that different image processors can
+be selected at run-time.
+
+*/
+/*!
+\defgroup date_time Items related to date/time processing
+\ingroup buildblock
+*/
+
+/*!
+\defgroup threads Items relating to threading of certain STIR functions.
+\ingroup buildblock
+*/
+
+/*!
+\defgroup CUDA Items relating to CUDA and STIR buildblock objects.
+\ingroup buildblock
+*/
+
+/*!
+\defgroup data_buildblock Acquisition data building blocks
+\ingroup STIR_library
+Library with building blocks for reading scan data
+\todo move projection data etc in here
+*/
+/*!
+\defgroup singles_buildblock Singles rates etc
+\ingroup data_buildblock
+*/
+
+/*!
+\defgroup numerics Numerical algorithms
+\ingroup STIR_library
+*/
+/*!
+\defgroup DFT Discrete Fourier transforms
+\ingroup numerics
+*/
+/*!
+\defgroup BSpline Classes and functions for B-spline interpolation.
+\ingroup numerics
+*/
+/*!
+\defgroup IO Input/Output Library
+\ingroup STIR_library
+Library with classes and functions to read and write images and projection
+from/to file.
+*/
+/*!
+\defgroup InterfileIO Interfile support in the IO library
+\ingroup IO
+*/
+/*!
+\defgroup MultiIO  support for "multi" files in the IO library
+\ingroup IO
+*/
+/*!
+\defgroup ECAT ECAT6 ... ECAT8 support in the IO library
+\ingroup IO
+*/
+
+/*!
+\defgroup GE support for GE data
+\ingroup IO
+*/
+
+/*!
+\defgroup listmode Support classes for reading list mode data
+\ingroup STIR_library
+*/
+
+/*!
+\defgroup Shape Classes for describing geometric shapes such as cylinders etc.
+\ingroup STIR_library
+*/
+
+/*!
+\defgroup evaluation Classes for computing ROI values and other FOMs
+   For image evaluation, it is often necessary to compute ROI values,
+   or other simple Figures of Merits (FOMs). These classes
+   and functions allow you do to this directly in STIR. This is mainly
+   useful for automation, as there is no nice graphical interface in STIR
+   to draw ROIs etc.
+\ingroup STIR_library
+*/
+
+/*!
+\defgroup recon_buildblock Reconstruction building blocks
+\ingroup STIR_library
+Library with 'general' reconstruction building blocks
+*/
+/*!
+\defgroup projection Projection building blocks
+\ingroup recon_buildblock
+Everything (?) related to projection matrices, forward and back projection.
+
+In the context of image reconstruction, 'forward projection' means going from
+the image to an estimate of the (mean of the) data. This is because in
+SPECT and PET, the measurements can be seen to be approximations of line
+integrals through the object.
+
+STIR keeps this terminology, even though it is unfortunate. (For instance,
+a stir::ProjMatrix is not a projection matrix in the mathematical sense.)
+*/
+/*!
+\defgroup symmetries Symmetries building blocks
+\ingroup projection
+Usually, there are (geometric) symmetries between the image and the projection
+data. This means that various elements of the projection matrix will be equal.
+The classes in this module convert this concept into code, such that projection
+matrices need only be computed for the 'independent' bins.
+*/
+/*!
+\defgroup normalisation Normalisation building blocks
+\ingroup recon_buildblock
+Everything related to BinNormalisation classes.
+
+In PET 'normalisation' is used to describe a multiplicative calibration of
+every detector-pair. More generally, it can be used to the process of
+'correcting' projection data by multiplying every bin with a factor.
+*/
+/*!
+\defgroup GeneralisedObjectiveFunction Objective functions for iterative estimation of variables
+\ingroup recon_buildblock
+Everything related to objective functions, i.e. functions that need to
+be 'optimised' in some way.
+*/
+/*!
+\defgroup priors Priors and penalties for MAP
+\ingroup GeneralisedObjectiveFunction
+Everything related to priors, which are used for MAP-type (also knows as
+'penalised') reconstructions.
+*/
+/*!
+\defgroup distributable distributable building blocks
+\ingroup recon_buildblock
+Classes and functions that are used to make a common interface for the serial
+and parallel implementation of the reconstruction algorithms.
+*/
+/*!
+\defgroup NiftyPET Wrapped NiftyPET functionality in STIR
+\ingroup recon_buildblock
+Classes and functions that are used to provide an interface to NiftyPET
+functionality. This includes projectors, unlisting and norms and randoms
+estimation. Currently only available for the mMR scanner, and requires CUDA.
+*/
+/*!
+\defgroup Parallelproj Wrapped Parallelproj functionality in STIR
+\ingroup recon_buildblock
+Classes and functions that are used to provide an interface to parallelproj
+(https://github.com/gschramm/parallelproj)
+functionality. This includes a forward and back projector, and uses either OpenMP or CUDA.
+*/
+
+/*!
+\defgroup reconstructors Reconstruction classes
+\ingroup STIR_library
+*/
+/*!
+\defgroup iterativereconstructors Iterative reconstructors
+\ingroup reconstructors
+Iterative (statistical) reconstruction algorithms.
+*/
+/*!
+\defgroup OSMAPOSL OSMAPOSL
+\ingroup iterativereconstructors
+Implementation of the OSMAP One-Step-Late reconstruction algorithm.
+*/
+/*!
+\defgroup KOSMAPOSL KOSMAPOSL
+\ingroup OSMAPOSL
+Implementation of the kernel-based OSMAP One-Step-Late reconstruction algorithm.
+*/
+/*!
+\defgroup OSSPS OSSPS
+\ingroup iterativereconstructors
+Implementation of the OS Separable Paraboloidal Surrogate reconstruction algorithm.
+*/
+/*!
+\defgroup analyticreconstructors Analytic reconstructors
+\ingroup reconstructors
+Analytic (direct, closed-form) reconstruction methods.
+*/
+/*!
+\defgroup FBP2D FBP2D
+\ingroup analyticreconstructors
+Implementation of the 2D Filtered Back Projection algorithm.
+*/
+/*!
+\defgroup FBP3DRP FBP3DRP
+\ingroup analyticreconstructors
+Implementation of the 3D Reprojection Filtered Back Projection algorithm.
+*/
+/*!
+\defgroup SRT2D SRT2D
+\ingroup analyticreconstructors
+Implementation of the 2D PET Spline Reconstruction Technique algorithm.
+*/
+/*!
+\defgroup SRT2DSPECT SRT2DSPECT
+\ingroup analyticreconstructors
+Implementation of the 2D SPECT Spline Reconstruction Technique algorithm.
+*/
+/*!
+\defgroup GRD2D GRD2D
+\ingroup analyticreconstructors
+Implementation of the 2D PET GRiDding algorithm.
+*/
+/*!
+\defgroup DDSR2D DDSR2D
+\ingroup analyticreconstructors
+Implementation of the 2D Direct Differentiation SPECT Reconstruction algorithm.
+*/
+/*!
+\defgroup modelling Kinetic modelling building blocks
+\ingroup STIR_library
+building blocks for kinetic modelling
+*/
+/*!
+\defgroup spatial_transformation Motion fields etc
+\ingroup STIR_library
+building blocks for motion fields, warping etc
+*/
+
+/*!
+\defgroup scatter Scatter estimation building blocks
+\ingroup STIR_library
+building blocks for scatter estimation
+*/
+
+/*!
+\defgroup display Display functions
+\ingroup STIR_library
+Library for displaying of images
+*/
+/*!
+\defgroup para Parallel library
+\ingroup STIR_library
+*/
+
+/*!
+\defgroup alltest Test code for STIR
+\ingroup STIR
+*/
+/*!
+\defgroup test Tests of the basic building blocks
+\ingroup alltest
+*/
+/*!
+\defgroup recon_test Tests of reconstruction building blocks
+\ingroup alltest
+*/
+/*!
+\defgroup numerics_test Tests of numeric building blocks
+\ingroup alltest
+*/
+
+/*!
+\defgroup main_programs Executables
+\ingroup STIR
+Almost all programs that can be executed by the user.
+*/
+/*!
+\defgroup utilities Utility programs
+\ingroup main_programs
+*/
+/*!
+\defgroup listmode_utilities Utility programs for list mode data
+\ingroup utilities
+*/
+/*!
+\defgroup ClearPET_utilities ClearPET listmode support (unfinished)
+\ingroup utilities
+*/
+/*!
+\defgroup ECAT_utilities ECAT6 and ECAT7 utilities
+\ingroup utilities
+Includes conversion programs etc.
+*/
+/*!
+\defgroup examples Example files
+\ingroup STIR
+Some examples files to illustrate some basic coding in STIR.
+*/
+/*!
+\defgroup simset Files tu support SimSET
+\ingroup STIR
+*/

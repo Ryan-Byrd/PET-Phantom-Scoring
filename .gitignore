@@ -1,10 +1,45 @@
 1200_Processed Images/
-CT_Analysis_Toolkit/
 CT_Config/
 CT_Output/
 
-# Ignore Python cache files
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# PyInstaller build artifacts
+build/
+build_rebuild/
+build_v2/
+build_speccheck/
+dist/
+dist_speccheck/
+release_v2/
+PET_QA_Toolkit.spec
+
+# LaTeX compilation artifacts
+auxil/
+out/
+*.aux
+*.log
+*.out
+*.synctex
+*.synctex(busy)
+
+# Stale run outputs
+outputs/
+overlay_output/
+roi_profiles/
+hotcell_contrast_overlay-*.png
+
+# Redundant / leftover files
+.gitignore.txt
+pip --version.txt
+pythonsciript.zip
+cmake_help.txt
+Notes\ For\ PET\ Template.txt
+Organized_DICOMs.zip
+p_e_t_q_a_workbench.html
+index.html
+Christian\ Files\ 2-2-2026/

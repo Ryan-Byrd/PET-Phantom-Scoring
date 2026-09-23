@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Summary of changes in STIR release 2.2 (dated 20 February 2012)</title>
+  </head>
+
+  <body>
+    <h1>Summary of changes in STIR release 2.2 (dated 20 February 2012)</h1>
+
+<p>This update was prepared by Kris Thielemans (Algorithms and Software Consulting Ltd).
+SimSET scripts were updated with help from Robert Harrison (Univ Washington).</p>
+
+<ul>
+
+<h2> Summary for end users (also to be read by developers)</h2>
+
+<h3>Important bug fixes</h3>
+<ul>
+<li>The routines to handle SimSET data did not really work in previous releases,
+but should work now. This is all still preliminary. Check SimSET/README.txt for
+some information.
+</li>
+</ul>
+
+<h3>New build system</h3>
+<ul>
+<li> release of files for an alternative cross-platform build system 
+<a href="http://www.cmake.org">CMake</a>, based on example files provided by 
+Robert Barnett (Westmead Hospital, Sydney) for STIR 2.1. The files distributed
+with version 2.2 are now complete and also include the tests.<br />
+CMake is much better than the previous STIR make files for configuration and finding system dependencies. 
+It also works on Windows for Visual Studio. Using CMake is recommended when using Visual Studio.
+</li>
+</ul>
+
+<h3>Known problems</h3>
+<ul>
+<li>This release is known to fail when both MPI and shared libraries are enabled. You will see linking errors in all non_MPI executables.</li>
+<li>The recon_test_pack routines fail with the MPI version. See the mailing list for a work-around.</li>
+<li>ECAT6 routines seem to have problems since STIR 2.0. ECAT6 is therefore no longer supported</li>
+<li>The interpolating back-projector can still give problems in the centre of the images
+on some architectures/compiler/optimisation settings. We recommend to use the ray-tracing
+matrix (with additional rays) instead.</li>
+<li>When using Visual Studio (Express) with the provided solution files, there is a linking problem for some
+utilities. It is recommended to use the new <tt>CMake</tt> files for building instead.</li>
+<li>When using <code>GRAPHICS=X</code> (i.e. on Unix/Linux/MacOSX) there window displaying
+the bitmaps is sometimes empty. This might depend on your X server settings.
+This affects <tt>manip_image</tt>, <tt>manip_projdata</tt> and <tt>display_projdata</tt>.
+</li>
+</ul>
+
+<h3>New functionality</h3>
+<ul>
+<li><tt>stir_math</tt> has two additional switches <tt>--parametric</tt> and <tt>--dynamic</tt>
+to handle parametric or dynamic images (no sinograms yet. sorry). Note however that output data
+will not incomplete headers. In particular, timing information will be lost.</li>
+<li><tt>list_image_info</tt> now also prints information about the edge of the voxels and the total
+sum in the image.</li>
+<li><tt>stir_write_pgm</tt> is a new utility to make a PGM image for a single slice of an image.</li>
+<li><tt>list_projdata_info</tt> now also optionally prints information about min, max and the total
+sum in the data (run without arguments to see a usage message).</li>
+</ul>
+
+<h3>Functionality changes</h3>
+<ul>
+<li>ECAT list-mode routines are now no longer included in the library when
+ECAT support is not enabled. (In STIR 2.1 they defaulted to use the ECAT 962 file format.)</li>
+<li>On Unix/Linux systems, <tt>manip_image</tt> and <tt>manip_projdata</tt> used to
+display a list of files in the current directory when asking for new input data.
+This is no longer implemented.</li>
+</li>
+</ul>
+
+<h3>Minor bug fixes</h3>
+<ul>
+<li>This update contains updates for more recent compilers
+(Clang++ 2.9, gcc 4.6.1 and Visual C++ 2010 are now supported).</li>
+<li>No longer write confusing warnings about <tt>ring
+  difference does not belong in a segment</tt> after calling
+  SSRB, in FBP3DRP etc.
+</li>
+<li>Empty lines in .par files could create problems in previous versions. This
+should be fixed now.
+</li>
+<li>The command line processing of <tt>create_tail_mask_from_ACFs</tt> only worked if all options were given (i.e. if
+you attempted to use the defaults, the program crashed).
+</li>
+</ul>
+
+<h3>Documentation changes</h3>
+<ul>
+<li>The User's guide has been improved. Major changes are related to 
+the scatter estimation, the use of a stored projection matrix, and the CMake
+build process.
+</li>
+<li>minor changes to doxygen documentation</li>
+ </ul>
+
+<h3>recon_test_pack changes</h3>
+<ul>
+<li>minor changes to some scripts for Bourne shell compatibility (as opposed to bash only)</li>
+ </ul>
+
+<h3>Other changes to tests</h3>
+<p>None</p>
+
+<H2>What's new for developers (aside from what should be obvious
+from the above):</H2>
+
+<h3>Major bugs fixed</h3>
+<p>None</p>
+
+<h3>New functionality</h3>
+<ul>
+<li>Pre-release of some very very preliminary code to use SWIG to make 
+a Python interface to STIR. It isn't complete by far, nor documented. 
+If you know SWIG, feel free to chip-in! (Let's discuss that on the stir-devel list).
+</li>
+</ul>
+
+<h3>Other code changes</h3>
+<ul>
+<li> <code>stir::shared_ptr</code> is now an alias for <code>boost::shared_ptr</code> from the Boost C++ library. This makes it much more robust and
+standard compliant. This means that you might have to change your code in a few
+places. For example:
+<pre>
+ // no longer works
+ shared_ptr&lt;MyType&gt; sptr = new MyType;
+ sptr = new MyType;
+ sptr = 0;
+
+ // replace with 
+ shared_ptr&lt;MyType&gt; sptr(new MyType);
+ sptr.reset(new MyType);
+ sptr.reset();
+</pre>
+</li>
+
+<li>Introduced new input file format registries for 
+<code>stir::DynamicDiscretisedDensity</code> and  
+<code>ParametricDiscretisedDensity</code>, moving the relevant code
+from the class definition. See the <tt>IO</tt> group.
+</li>
+<li>Replaced most occurences of <code>ClassName::read_from_file</code>
+with <code>read_from_file&lt;ClassName&gt;</code>, for those classes
+which have an input file format registry (i.e. all except <code>ProjData</code>). These two versions
+are currently functionally identical (as the first version will call the
+second), but the first version is deprecated as it prevents us to separate
+the <tt>IO</tt> and <tt>buildblock</tt> libraries.
+</li>
+<li>Minor fixes to some utilities (bugs spotted by David Volgyes by using cppcheck.</li>
+</ul>
+</body>
+
+</html>
+

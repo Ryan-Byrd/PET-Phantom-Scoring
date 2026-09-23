@@ -1,0 +1,8 @@
+FBP2DParameters :=
+; test file for FBP2D
+input file := my_precorrected_sino${suffix}.hs
+xy output image size (in pixels) := 91
+zoom := .5
+
+output filename prefix := my_test_sim_image_FBP2D
+END :=

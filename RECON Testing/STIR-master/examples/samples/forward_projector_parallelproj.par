@@ -1,0 +1,14 @@
+Forward Projector parameters:=
+; example par file for specifying the forward projector for forward_project etc
+; this example uses the parallelproj projector
+type:=Parallelproj
+Forward Projector Using Parallelproj Parameters:=
+; by default, we only use a cylindrical FOV
+; you can use the full image by setting the following to 0
+restrict to cylindrical FOV := 1
+; this keyword allows increasing the number of chunks that the projector uses
+; increase if you run out of GPU memory
+num_gpu_chunks:=1
+verbosity:=0
+End Forward Projector Using Parallelproj Parameters:=
+end:=

@@ -1,0 +1,132 @@
+//
+//
+/*
+    Copyright (C) 2000 PARAPET partners
+    Copyright (C) 2000- 2007, Hammersmith Imanet Ltd
+    Copyright (C) 2016, 2018, 2019 University College London
+    This file is part of STIR.
+
+    SPDX-License-Identifier: Apache-2.0  AND License-ref-PARAPET-license
+
+    See STIR/LICENSE.txt for details
+*/
+#ifndef __stir_recon_buildblock_AnalyticReconstruction_H__
+#define __stir_recon_buildblock_AnalyticReconstruction_H__
+/*!
+  \file
+  \ingroup recon_buildblock
+
+  \brief declares the stir::AnalyticReconstruction class
+
+  \author Kris Thielemans
+  \author Nikos Efthimiou
+  \author PARAPET project
+
+*/
+
+#include "stir/recon_buildblock/Reconstruction.h"
+#include "stir/DiscretisedDensity.h"
+#include "stir/ProjData.h"
+#include "stir/RegisteredParsingObject.h"
+#include "stir/ParseAndCreateFrom.h"
+#include <string>
+
+#include "stir/ExamData.h"
+
+START_NAMESPACE_STIR
+
+class Succeeded;
+
+/*!
+  \brief base class for all analytic reconstruction algorithms
+  \ingroup recon_buildblock
+  This class provides extra functinoality (compared to Reconstruction) as it assumes
+  that the \c TargetT is really a VoxelsOnCartesianGrid.
+
+  \todo Currently the template argument uses DiscretisedDensity
+  because of conversion problems with stir::shared_ptr. Maybe it will be
+  possible to correct this once we use boost:shared_ptr.
+  */
+class AnalyticReconstruction : public Reconstruction<DiscretisedDensity<3, float>>
+{
+public:
+  typedef DiscretisedDensity<3, float> TargetT;
+
+private:
+  typedef Reconstruction<TargetT> base_type;
+
+public:
+  //! construct an image from parameters set (e.g. during parsing)
+  virtual DiscretisedDensity<3, float>* construct_target_image_ptr() const;
+
+  //! reconstruct and write to file
+  /*!
+    Calls construct_target_image_ptr() and then actual_reconstruct(target_image_sptr).
+    At the end of the reconstruction, the final image is saved to file as given in
+    Reconstruction::output_filename_prefix.
+    \return Succeeded::yes if everything was alright.
+   */
+  Succeeded reconstruct() override;
+
+  //! executes the reconstruction storing result in \c target_image_sptr
+  /*!
+    Calls actual_reconstruct()
+    \return Succeeded::yes if everything was alright.
+
+   \par Developer\'s note
+
+   Because of C++ rules, overloading one of the reconstruct() functions
+   in a derived class, hides the other. So, we need an implementation for
+   this function. This is the reason to use the actual_reconstruct function.
+  */
+  Succeeded reconstruct(shared_ptr<TargetT> const& target_image_sptr) override;
+
+  void set_input_data(const shared_ptr<ExamData>&) override;
+  const ProjData& get_input_data() const override;
+  //! @name forwarding functions for ParseDiscretisedDensityParameters
+  //@{
+  int get_output_image_size_xy() const;
+  void set_output_image_size_xy(int);
+  int get_output_image_size_z() const;
+  void set_output_image_size_z(int);
+  float get_zoom_xy() const;
+  void set_zoom_xy(float);
+  float get_zoom_z() const;
+  void set_zoom_z(float);
+  const CartesianCoordinate3D<float>& get_offset() const;
+  void set_offset(const CartesianCoordinate3D<float>&);
+  //@}
+
+protected:
+  //! the input projection data file name
+  std::string input_filename;
+  //! the maximum absolute ring difference number to use in the reconstruction
+  /*! convention: if -1, use get_max_segment_num()*/
+  int max_segment_num_to_process;
+
+  //! points to the object for the total input projection data
+  shared_ptr<ProjData> proj_data_ptr;
+  // KT 20/06/2001 disabled
+#if 0
+  //! number of views to add (i.e. mashing)
+  int num_views_to_add;
+#endif
+
+protected:
+  ParseAndCreateFrom<TargetT, ProjData> target_parameter_parser;
+
+  //! executes the reconstruction storing result in \c target_image_sptr
+  /*!
+    \return Succeeded::yes if everything was alright.
+  */
+  virtual Succeeded actual_reconstruct(shared_ptr<TargetT> const& target_image_sptr) = 0;
+
+  //! used to check acceptable parameter ranges, etc...
+  bool post_processing() override;
+  void set_defaults() override;
+  void initialise_keymap() override;
+};
+
+END_NAMESPACE_STIR
+
+#endif

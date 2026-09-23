@@ -1,0 +1,32 @@
+{
+  "uniformity": {
+    "patient": "PHYANNU25UNI_PHYANNU25UNI",
+    "series_num": "014",
+    "series_desc": "PET_AC_WB_M",
+    "folder": "C:\\Users\\RyanByrd\\OneDrive - ONE Physics\\General - Radcom Files\\PET Python Scripts\\Test Cases\\Converted Data\\organized\\Texas_Oncology_Imaging_Infusion DICOM Images\\PHYANNU25UNI_PHYANNU25UNI\\014_PET_AC_WB_M",
+    "file_count": 81,
+    "modality": "PT",
+    "label": "uniformity",
+    "slice_thickness_mm": 3.27
+  },
+  "acr": {
+    "patient": "PHY25ANNUACR_PHY25ANNUACR",
+    "series_num": "1200",
+    "series_desc": "AXIAL_FUSED",
+    "folder": "C:\\Users\\RyanByrd\\OneDrive - ONE Physics\\General - Radcom Files\\PET Python Scripts\\Test Cases\\Converted Data\\organized\\Texas_Oncology_Imaging_Infusion DICOM Images\\PHY25ANNUACR_PHY25ANNUACR\\1200_AXIAL_FUSED",
+    "file_count": 20,
+    "modality": "PT",
+    "label": "acr",
+    "slice_thickness_mm": 10.0
+  },
+  "crp": {
+    "patient": "PHY25ANNUCRP_PHY25ANNUCRP",
+    "series_num": "1200",
+    "series_desc": "AXIAL_FUSED",
+    "folder": "C:\\Users\\RyanByrd\\OneDrive - ONE Physics\\General - Radcom Files\\PET Python Scripts\\Test Cases\\Converted Data\\organized\\Texas_Oncology_Imaging_Infusion DICOM Images\\PHY25ANNUCRP_PHY25ANNUCRP\\1200_AXIAL_FUSED",
+    "file_count": 20,
+    "modality": "PT",
+    "label": "crp",
+    "slice_thickness_mm": 10.0
+  }
+}

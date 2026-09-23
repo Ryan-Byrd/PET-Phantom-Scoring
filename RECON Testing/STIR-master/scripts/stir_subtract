@@ -1,0 +1,18 @@
+#! /bin/sh
+# A simple script that call stir_math for subtraction
+#
+#  Copyright (C) 2005- 2008, Hammersmith Imanet Ltd
+#  This file is part of STIR.
+#
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  See STIR/LICENSE.txt for details
+#      
+# Author Kris Thielemans
+# 
+# Example:
+# stir_subtract output file1 file2
+# => will set output to file1-file2
+# Usual stir_math options can be used to change all this
+echo "stir_math --add --times-scalar -1 $*"
+stir_math --add --times-scalar -1 $*

@@ -1,0 +1,21 @@
+{
+  "uniformity": {
+    "patient": "UNIFORMITY_PHYS26",
+    "series_num": "004",
+    "series_desc": "WB_2D",
+    "folder": "C:\\Users\\RyanByrd\\OneDrive - ONE Physics\\Documents\\Audits In Progress\\2026\\01-January\\Brittany PET\\organized\\Willowbrook_Cardiovascular_Assoc DICOM Images\\UNIFORMITY_PHYS26\\004_WB_2D",
+    "file_count": 91,
+    "modality": "PT",
+    "label": "uniformity"
+  },
+  "acr": {
+    "patient": "ACR_10_MM_PHYS26",
+    "series_num": "400",
+    "series_desc": "10MM",
+    "folder": "C:\\Users\\RyanByrd\\OneDrive - ONE Physics\\Documents\\Audits In Progress\\2026\\01-January\\Brittany PET\\organized\\Willowbrook_Cardiovascular_Assoc DICOM Images\\ACR_10_MM_PHYS26\\400_10MM",
+    "file_count": 21,
+    "modality": "PT",
+    "label": "acr"
+  },
+  "crp": null
+}

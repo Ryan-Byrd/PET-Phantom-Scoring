@@ -1,0 +1,221 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Summary of changes in STIR release 2.1 (dated June 2011)</title>
+  </head>
+
+  <body>
+    <h1>Summary of changes in STIR release 2.1 (dated June 2011)</h1>
+
+<p>Most of the work in this update was by Kris Thielemans (Hammersmith Imanet Ltd)
+and Charalampos Tsoumpas (Imperial College and Hammersmith Imanet Ltd, now King's College London).
+Some older code by Sanida Mustafovic (Imperial College and Hammersmith Imanet Ltd) 
+has now finally been incorporated into STIR as well.
+Careful testing and investigation by Charalampos Tsoumpas and Irene Polycarpou (both King's 
+College London) uncovered some old bugs, which were corrected after discussions with
+Matthew Jacobson (Xoran Technologies).
+Other contributions are mentioned explicitly below.<br />
+See also the new <tt>contrib</tt> sub-directory available in the documentation zip file.
+</p>
+<ul>
+<li>Single scatter estimation routines<br />
+Contributors: Charalampos Tsoumpas, Pablo Aguiar (Univ of Barcelona, when working on this topic), 
+Nikolaos Dikaios (National Technical University of Athens, when working on this topic) 
+and Kris Thielemans.
+</li>
+<li>Parametric image estimation routines.<br />
+Contributors: Charalampos Tsoumpas and Kris Thielemans
+</li>
+
+<li>B-spline interpolation functions and a few numerical algorithms.<br />
+Contributors: Charalampos Tsoumpas, 
+Nikolaos Dikaios (National Technical University of Athens, when working on this topic) 
+and Kris Thielemans.
+</li>
+</ul>
+
+<h2> Summary for end users (also to be read by developers)</h2>
+
+<h3>Important bug fixes</h3>
+<ul>
+<li>fixed a problem in the computation for the gradient of the Poisson log-likelihood that occured
+if a viewgram of the measured data was zero (which should occur only a dramatically noisy situations).</li>
+<li>fixed a problem in the computation of the Poisson log-likelihood that the multiplicative term of the 
+model was ignored. Objective function values prior to this fix were therefore incorrect (except for the 
+case where there was no multiplicative term). However, this bug did not affect actual reconstructed images.<br />
+(In addition, the computation of the objective function now has increased numerical accuracy.)</li>
+<li>the MPI support for OSMAPOSL introduced in STIR 2.0 was broken (it did not compile, and needed some 
+fixes before obtaining the correct result).</li>
+</ul>
+<h3>Known problems</h3>
+<ul>
+<li>ECAT6 routines seem to have problems since STIR 2.0. ECAT6 is therefore no longer supported</li>
+<li>The interpolating back-projector can still give problems in the centre of the images
+on some architectures/compiler/optimisation settings. We recommend to use the ray-tracing
+matrix (with additional rays) instead.</li>
+<li>When using Visual Studio (Express) with the provided solution files, there is a linking problem for some
+utilities. It is recommended to use the new <tt>CMake</tt> files for building instead.</li>
+<li>Some of the new list mode files might not compile with Visual Studio (Express).</li>
+</ul>
+
+<h3>New utilities</h3>
+<ul>
+<li><tt>abs_image</tt>, <tt>convert_to_binary_image</tt>, <tt>find_fwhm_in_image</tt>,
+<tt>list_detector_and_bin_info</tt>.</li>
+<li>Utilities in <tt>modelling_utilities</tt>.</li>
+<li>Parametric image reconstruction algorithms <tt>POSMAPOSL</tt> and <tt>POSSPS</tt>. 
+Currently we have only an objective function for Patlak, but extension
+to other linear models is easy.</li>
+<li>New utilities in <tt>listmode_utilities</tt>: <tt>lm_to_projdata_bootstrap</tt>
+(useful to generate multiple realisations from a single list mode file to study variance), 
+<tt>list_lm_events</tt> and <tt>lm_fansums</tt> (useful for developing normalization code).</li>
+<li>A few scripts are now also copied with <tt>make install</tt>, including the
+new <tt>stir_print_voxel_sizes.sh</tt>.</li>
+</ul>
+
+
+<h3>New functionality of existing utilities</h3>
+<ul>
+<li>Added data for the <strong>GE Discovery 600</strong>.</li>
+<li>Added data for the <strong>Biograph 16</strong> (by Robert Barnett, Westmead Hospital, Sydney).</li>
+<li><tt>stir_math</tt> has 2 new options <tt>--parametric</tt> or <tt>--dynamic</tt>.</li>
+<li><tt>OSMAPOSL</tt> and <tt>OSSPS</tt> have a new "subset sensitivity filenames" which can be set to 
+e.g. <tt>subsens_%d.hv</tt>. This is useful when <tt>use_subset_sensitivities</tt> is set (which is now
+<strong>recommended</strong>).</li>
+<li> <tt>OSMAPOSL</tt> now accepts a prior even if <tt>use_subset_sensitivities</tt> is set.</li>
+<li>In addition to <tt>OSMAPOSL</tt>, <tt>OSSPS</tt> is now also parallelised when using <i>MPI</i>.
+</ul>
+
+<h3>Functionality changes</h3>
+<ul>
+<li>The ray tracing projection matrix can be enabled (at compile time) to use a circular FOV 
+that goes to the edge of the image (i.e. approx one pixel larger than what it used to be). 
+However, enabling this gave a change in the <tt>recon_test_pack</tt> results (probably mostly because 
+that data contains scatter, while the <tt>recon_test_pack</tt> code does not model scatter). Therefore,
+this change is disabled by default. You can add <tt>-DSTIR_PMRT_LARGER_FOV</tt> to <tt>EXTRA_CFLAGS</tt>
+if you want this anyway.
+</li>
+<li>Most utilities will now display a somewhat involved message when an error occured. Exact format
+will be system/compiler dependent, but could be something like
+<pre>
+ERROR: Error opening file test.hv
+
+terminate called after throwing an instance of 'std::string'
+Aborted (core dumped)
+</pre>
+The useful bit is after the <tt>ERROR</tt> string. Ignore the rest (see <a href="#errorThrowsException">
+here why this happens</a>).
+</li>
+</ul>
+
+<h3>Documentation changes</h3>
+<ul>
+<li>updated doxygen and User's Guide</li>
+ </ul>
+
+<h3>recon_test_pack changes</h3>
+<ul>
+<li>Moved the tests for the ecat routines to a separate file <tt>run_ecat_tests.sh</tt></li>
+<li>Created a new script <tt>run_test_simulate_and_recon.sh</tt> that performs a 
+simple analytic simulation of a uniform cylinder,
+reconstructs it with all STIR reconstruction algorithms and checks ROI values.</li>
+<li>Updated Windows batch files. They were broken in STIR 2.0</li>
+</ul>
+
+<h3>Other changes to tests</h3>
+<ul>
+<li>A new test in <tt>recon_test</tt> checks the gradient computation vs
+a numerical gradient by computing the objective function. This is currently
+only enabled for <code>PoissonLogLikelihoodWithLinearModelForMeanAndProjData</code>.
+</li>
+</ul>
+
+<H2>What's new for developers (aside from what should be obvious
+from the above):</H2>
+
+<h3>Major bugs fixed</h3>
+<ul>
+<li> <code>ProjData::set_segment</code> was always writing the same data 
+(namely the one where view_num=segment_num). This bug existed since the
+very first version of STIR. Nobody seems to have been using
+this function, as the result was obviously wrong.</li>
+<li>The objective function values were computed ignoring multiplicative corrections
+and background terms.</li>
+<li>The ECAT962 and 966 list mode event functions <code>get_detection_coordinates()</code>
+and <code>get_LOR()</code> returned coordinates in a different coordinate system as expected
+(z=0 was in the first ring of the scanner as opposed to the centre of the scanner). These functions
+were not used by the rest of STIR however.</li>
+</ul>
+
+<h3>Major revision of the listmode classes</h3>
+<p>These are now ready for data from non-CTI scanners.</p>
+<ul>
+<li><code>CListEvent::get_detection_coordinates()</code> no longer exists (use <code>get_LOR</code> instead).</li>
+<li><code>CListTime::get/set_gating</code> have been moved to new <code>CListGatingInput</code> class 
+as not all scanners have gating related info in the timing event.</li>
+<li><code>CListRecordUsingUnion</code> and <code>CListModeDataFromStream</code> no longer exist. 
+The IO functionality of the latter is now in the new (more generic) class <code>InputStreamWithRecords</code>.</li>
+</ul>
+
+<h3>New functionality</h3>
+<ul>
+<li><code>ArrayFilter2DUsingConvolution</code> and <code>ArrayFilter3DUsingConvolution</code>.</li>
+<li>Preliminary classes for dynamic and gated data</li>
+<li>New member <code>fill_nonidentifiable_target_parameters</code> of the 
+<code>GeneralisedObjectiveFunction</code> hierarchy. This used by OSSPS to avoid problems
+when initialising with images that have for instance been reconstructed on a square grid.</li>
+<li>B-spline interpolation functions and a few numerical algorithms (IIR and FIR filters, 
+1d numerical integration).</li>
+</ul>
+
+<h3>Other code changes</h3>
+<ul>
+<li><a name="errorThrowsException"><code>error()</code> now throws an exception as opposed to calling exit</a>, 
+such that we can catch 
+the exception in a calling routine. This would be essential for building GUIs etc. Unfortunately,
+for the user this has the potential to generate some confusion as the error message
+when a STIR program calls <code>error()</code> now talks about unhandled exception.
+The best way to solve this would be to catch all exceptions in each <code>main()</code>, but
+that is a lot of work...</li>
+<li><code>ProjDataInfoCylindrical::set_num_views()</code> now  makes sure that we cover the
+      same range of angles as before (usually, but not necessarily, 180 degrees).
+</li>
+<li><code>PoissonLogLikelihoodWithLinearModelForMean</code> has been changed to be more consistent
+in the subset sensitivity interface:
+<ul>
+  <li>The parser has a new keyword <tt>subset sensitivity filenames</tt> which can be set to e.g. <tt>subsens_%d.hv</tt></li>
+  <li>Derived classes have to define a virtual function <code>set_up_before_sensitivity()</code> (essentially
+replacing what they used to have in <code>setup()</code> before, except for the call to <code>base_type::setup()</code>).</li>
+  <li><code>setup()</code> now class <code>set_up_before_sensitivity()</code>, computes (subset)sensitivities, and if required,
+writes them to disk.</li>
+  <li><code>get_sensitivity(subset_num)</code> is replaced by <code>get_sensitivity()</code> and <code>get_subset_sensitivity(subset_num)</code></li>
+  <li><code>set_sensitivity_sptr</code> is now called <code>set_subset_sensitivity_sptr</code></li>
+  <li> <code>fill_nonidentifiable_target_parameters</code> uses <code>get_sensitivity()</code> and hence no longer only checks the first subset.</li>
+</ul>
+<li>Most of the .cxx files in the <tt>recon_buildblock</tt> had to be updated to
+add instantiations for parametric images. This is unfortunate and another
+mechanism would be nicer.
+</li>
+<li>moved code that finds subset-num in terms of subiteration-num to 
+<code>IterativeReconstruction::get_subset_num()</code>. If you have your own 
+reconstruction classes, you should use this member. 
+<code>IterativeReconstruction::randomly_permute_subset_order()</code> is now private.</li>
+<li><code>read_stream_in_memory</code> (in <tt>utilities.h</tt>) now takes a <code>file_size</code> 
+argument of type <code>std::streamsize</code> as opposed to <code>unsigned long</code>. As
+this parameter is passed as a reference, this change is <strong>not backwards compatible</strong>
+(at least on systems where these 2 types are not equal).</li>
+<li><code>FullArrayIterator</code> and <code>NestedIterator</code> now have extra constructors to be able to convert
+compatible iterators (e.g. <code>full_iterator</code> to <code>const_full_iterator</code>).</li>
+<li><code>NestedIterator</code> has more help classes for cases where the top-level iterator refers to 
+a pointer to the 2nd level iterator.</li>
+<li>Various small fixes for more recent compilers such as gcc 4.3 and Visual Studio Express 2010.</li>
+<li>Initial release of files for an alternative cross-platform build system 
+<a href="http://www.cmake.org">CMake</a>, based on example files provided by 
+Robert Barnett (Westmead Hospital, Sydney). This is much better for configuration and finding system dependencies.
+However, tests are not yet included in the CMakeFiles.</li>
+</ul>
+
+</body>
+
+</html>
+

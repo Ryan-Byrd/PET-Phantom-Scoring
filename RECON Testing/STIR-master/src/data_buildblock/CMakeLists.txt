@@ -1,0 +1,47 @@
+#
+#
+# Copyright 2011-01-01 - 2011-06-30 Hammersmith Imanet Ltd
+# Copyright 2011-07-01 - 2013 Kris Thielemans
+
+# This file is part of STIR.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# See STIR/LICENSE.txt for details
+
+# cmake file for building STIR. See the STIR User's Guide and http://www.cmake.org.
+
+set(dir  data_buildblock)
+
+set (dir_LIB_SOURCES ${dir}_LIB_SOURCES)
+
+set(${dir_LIB_SOURCES}
+	SinglesRates.cxx
+	SinglesRatesForTimeFrames.cxx
+        SinglesRatesForTimeSlices.cxx
+        randoms_from_singles.cxx
+)
+if (HAVE_ECAT)
+  list(APPEND  ${dir_LIB_SOURCES}
+	SinglesRatesFromSglFile.cxx
+	SinglesRatesFromECAT7.cxx
+  )
+endif()
+if (HAVE_HDF5)
+    list (APPEND  ${dir_LIB_SOURCES}
+        SinglesRatesFromGEHDF5.cxx
+  )
+endif()
+
+target_sources(${STIR_BUILDBLOCK_LIB} PRIVATE ${${dir_LIB_SOURCES}})
+
+set(TARGET ${STIR_BUILDBLOCK_LIB})
+
+if (HAVE_HDF5)
+  if (USE_HDF5_TARGET)
+    target_link_libraries(${TARGET} PUBLIC ${HDF5_TARGET})
+  else()
+    # for GEHDF5, TODO remove once IO dependency added or GEHDF5Wrapper no longer includes H5Cpp.h
+    target_include_directories(${TARGET} PRIVATE ${HDF5_INCLUDE_DIRS})
+  endif()
+endif()
